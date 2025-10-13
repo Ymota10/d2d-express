@@ -31,6 +31,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AreasAndCitiesSeeder::class,
             BranchShippingFeesSeeder::class,
+            FlyerSeeder::class,
+
         ]);
 
         // Re-enable foreign key checks
