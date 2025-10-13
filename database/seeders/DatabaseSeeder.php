@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'management' => 'admin', // 👈 add this line
         ]);
 
         // Add this line to run your AreasAndCitiesSeeder
