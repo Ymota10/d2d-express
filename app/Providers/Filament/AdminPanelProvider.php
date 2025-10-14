@@ -27,7 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->passwordReset() // ✅ This enables the "Forgot password?" link
+            ->passwordReset()
             ->colors([
                 'primary' => '#02447d',
                 'secondary' => '#800080',
@@ -40,32 +40,45 @@ class AdminPanelProvider extends PanelProvider
                 'lime' => '#50C878',
                 'Darkgreen' => '#008000',
                 'neon' => '#0FFF50',
-
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->discoverResources(
+                in: app_path('Filament/Resources'),
+                for: 'App\\Filament\\Resources'
+            )
+            ->discoverPages(
+                in: app_path('Filament/Pages'),
+                for: 'App\\Filament\\Pages'
+            )
             ->pages([
-                Pages\Dashboard::class,
+                Pages\Dashboard::class, // Keep the dashboard page registered
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            // Discover all widgets so Livewire can find them
+            ->discoverWidgets(
+                in: app_path('Filament/Widgets'),
+                for: 'App\\Filament\\Widgets'
+            )
+            // Specify **only the dashboard widgets you want in this order**
             ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
+                \App\Filament\Widgets\Cards::class,
+                \App\Filament\Widgets\MonthlyOrdersChart::class,
+                \App\Filament\Widgets\MonthlyShippersChart::class,
+                \App\Filament\Widgets\UnsuccessfulReasonsWidget::class,
+                \App\Filament\Widgets\DeliveryRateChart::class,
+                \App\Filament\Widgets\FinanceSummaryChart::class,
+                \App\Filament\Widgets\AverageDeliveryTimeChart::class,
+                \App\Filament\Widgets\CitySuccessRateWidget::class,
             ])
             ->brandLogo(asset('images/d2d_MAIN_LOGO-removebg-preview.png'))
-            ->brandLogoHeight('150px') // Adjust the size as needed
+            ->brandLogoHeight('150px')
             ->favicon('images/d2d MAIN LOGO.jpg')
-
-            ->sidebarCollapsibleOnDesktop() // keeps  menu collapsed
-
+            ->sidebarCollapsibleOnDesktop()
             ->navigationItems([
-                NavigationItem::make('Our Webiste')
-                    ->url('https://d2d-express-eg.com', shouldOpenInNewTab: true) // ✅ opens in new tab
-                    ->icon('heroicon-o-tv') // pc icon
-                    ->group('External') // pc icon
-                    ->sort(10), // position in sidebar
+                NavigationItem::make('Our Website')
+                    ->url('https://d2d-express-eg.com', shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-tv')
+                    ->group('External')
+                    ->sort(10),
             ])
-
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
