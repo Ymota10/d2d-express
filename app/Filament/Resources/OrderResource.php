@@ -339,7 +339,8 @@ class OrderResource extends Resource
                 Tables\Filters\SelectFilter::make('users_id')
                     ->label('Shipper')
                     ->options(User::where('management', 'shipper')->pluck('name', 'id'))
-                    ->searchable(),
+                    ->searchable()
+                    ->visible(fn () => auth()->user()?->management === 'admin'),
 
                 // 🔍 Filter by City
                 Tables\Filters\SelectFilter::make('city_id')

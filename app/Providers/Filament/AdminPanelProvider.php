@@ -50,7 +50,9 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Pages'
             )
             ->pages([
-                Pages\Dashboard::class, // Keep the dashboard page registered
+                // Pages\Dashboard::class, // Keep the dashboard page registered
+                \App\Filament\Pages\Dashboard::class,
+
             ])
             // Discover all widgets so Livewire can find them
             ->discoverWidgets(

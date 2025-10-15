@@ -126,6 +126,7 @@ class FinancialAnalysisResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
             ])
             ->filters([
+                // 📅 Date Range Filter
                 Filter::make('date_range')
                     ->form([
                         Forms\Components\DatePicker::make('from')->label('From Date'),
@@ -135,6 +136,8 @@ class FinancialAnalysisResource extends Resource
                         ->when($data['from'], fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
                         ->when($data['to'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
                     ),
+
+                // 🔍 Keyword Filter
                 Filter::make('keyword')
                     ->form([
                         Forms\Components\TextInput::make('keyword')
@@ -147,7 +150,15 @@ class FinancialAnalysisResource extends Resource
                             ->orWhere('item_name', 'like', "%{$keyword}%")
                         ))
                     ),
+
+                // 🧍‍♂️ Shipper Filter (Visible Only for Admins)
+                Tables\Filters\SelectFilter::make('users_id')
+                    ->label('Shipper')
+                    ->options(\App\Models\User::where('management', 'shipper')->pluck('name', 'id'))
+                    ->searchable()
+                    ->visible(fn () => auth()->user()?->management === 'admin'),
             ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
 
