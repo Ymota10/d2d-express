@@ -27,7 +27,12 @@ class Cards extends BaseWidget
         $pickupRequest = (clone $orderQuery)->where('status', 'pickup_request')->count();
         $warehouseReceived = (clone $orderQuery)->where('status', 'warehouse_received')->count();
         $outForDelivery = (clone $orderQuery)->where('status', 'out_for_delivery')->count();
-        $timeScheduled = (clone $orderQuery)->where('status', 'time_scheduled')->count();
+
+        // ✅ Combine time_scheduled + returned_to_warehouse
+        $inProgress = (clone $orderQuery)
+            ->whereIn('status', ['time_scheduled', 'returned_to_warehouse'])
+            ->count();
+
         $successDelivery = (clone $orderQuery)->where('status', 'success_delivery')->count();
         $undelivered = (clone $orderQuery)->where('status', 'undelivered')->count();
 
@@ -76,8 +81,9 @@ class Cards extends BaseWidget
                 ->color('success')
                 ->extraAttributes(['class' => 'bg-green-100 shadow-md rounded-lg p-4']),
 
-            Stat::make('Time Scheduled', $timeScheduled)
-                ->icon('heroicon-o-clock')
+            // ✅ Combined “In Progress” card
+            Stat::make('In Progress', $inProgress)
+                ->icon('heroicon-m-chevron-double-up')
                 ->color('gray')
                 ->extraAttributes(['class' => 'bg-purple-100 shadow-md rounded-lg p-4']),
 
