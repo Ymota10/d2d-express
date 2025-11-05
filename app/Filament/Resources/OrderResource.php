@@ -519,7 +519,15 @@ class OrderResource extends Resource
                         ->action(function (\Illuminate\Support\Collection $records) {
                             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('filament.pages.bulk-waybills', [
                                 'orders' => $records,
-                            ]);
+                                'language' => 'ar', // switch to 'en' if needed
+                            ])
+                                ->setOptions([
+                                    'isHtml5ParserEnabled' => true,
+                                    'isRemoteEnabled' => true,
+                                    'defaultFont' => 'Amiri',
+                                    'isFontSubsettingEnabled' => true,
+                                    'dpi' => 150,
+                                ]);
 
                             $fileName = 'waybills_'.now()->format('Y_m_d_His').'.pdf';
 
