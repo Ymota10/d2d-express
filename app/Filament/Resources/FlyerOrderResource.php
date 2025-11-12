@@ -115,11 +115,18 @@ class FlyerOrderResource extends Resource
                 Tables\Columns\TextColumn::make('area.name')->label('Area'),
                 Tables\Columns\TextColumn::make('delivery_cost')->money('egp'),
                 Tables\Columns\BadgeColumn::make('status')
+                    ->getStateUsing(fn ($record) => match ($record->status) {
+                        'pending' => 'Pending',
+                        'out_for_delivery' => 'Out for delivery',
+                        'delivered' => 'Delivered',
+                        default => $record->status,
+                    })
                     ->colors([
-                        'warning' => 'pending',
-                        'info' => 'out_for_delivery',
-                        'success' => 'delivered',
+                        'warning' => 'Pending',           // orange/yellow
+                        'success' => 'Delivered',         // green
+                        'neon' => 'Out for delivery',  // light green (we’ll use secondary or custom)
                     ]),
+
                 Tables\Columns\TextColumn::make('created_at')->dateTime(),
             ])
             ->filters([])
