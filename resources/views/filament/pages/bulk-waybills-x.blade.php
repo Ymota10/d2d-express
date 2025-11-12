@@ -1,15 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ $language ?? 'ar' }}" dir="{{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <title>D2D Express Waybill</title>
     <style>
+        @font-face {
+            font-family: 'Amiri';
+            src: url('{{ public_path("fonts/Amiri-Regular.ttf") }}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Amiri', DejaVu Sans, sans-serif;
             font-size: 10px;
             margin: 0;
             padding: 0;
             background: #fff;
+            direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
+            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
         }
 
         .waybill {
@@ -28,7 +37,7 @@
             margin-bottom: 6px;
         }
         .logo img {
-            height: 60px; /* Bigger logo */
+            height: 60px;
         }
         .barcode {
             font-size: 18px;
@@ -66,21 +75,32 @@
             background: #eaeaea;
             border-bottom: 1px solid #000;
             padding: 3px 5px;
+            text-align: center;
         }
 
         .info-table {
             width: 100%;
             border-collapse: collapse;
+            direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
         }
+
         .info-table td {
             padding: 3px 5px;
             font-size: 10px;
             vertical-align: top;
             border-bottom: 1px solid #ddd;
+            word-break: break-word;
         }
+
         .info-table td.label {
             font-weight: bold;
-            width: 35%;
+            width: 40%;
+            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
+        }
+
+        .info-table td.value {
+            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
+            font-family: 'Amiri', DejaVu Sans, sans-serif;
         }
 
         /* Footer */
@@ -90,14 +110,29 @@
             padding-top: 3px;
             font-size: 9px;
         }
+
         .footer-row {
             display: flex;
             justify-content: space-between;
+            direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
         }
     </style>
 </head>
 <body>
+@php
+    use ArPHP\I18N\Arabic;
+    $arabic = new Arabic();
+@endphp
+
 @foreach ($orders as $order)
+    @php
+        $receiverName = $arabic->utf8Glyphs($order->receiver_name ?? '');
+        $receiverAddress = $arabic->utf8Glyphs($order->receiver_address ?? '');
+        $areaName = $arabic->utf8Glyphs($order->area->name ?? '');
+        $cityName = $arabic->utf8Glyphs($order->city->name ?? '');
+        $shipperName = $arabic->utf8Glyphs($order->user->name ?? '');
+    @endphp
+
     <div class="waybill">
         <!-- HEADER -->
         <div class="header">
@@ -110,37 +145,38 @@
 
         <!-- COD + DELIVERY -->
         <div class="summary">
-            <div>DELIVER</div>
-            <div>COD: {{ number_format($order->cod_amount, 2) }}</div>
+            <div>{{ __('DELIVER') }}</div>
+            <div>{{ __('COD') }}: {{ number_format($order->cod_amount, 2) }} {{ __('EGP') }}</div>
         </div>
 
         <!-- RECEIVER INFO -->
         <div class="section">
-            <div class="section-title">Receiver Information</div>
+            <div class="section-title">{{ __('Receiver Information') }}</div>
             <table class="info-table">
-                <tr><td class="label">Name</td><td>{{ $order->receiver_name }}</td></tr>
-                <tr><td class="label">Mobile 1</td><td>{{ $order->receiver_mobile_1 }}</td></tr>
-                <tr><td class="label">Mobile 2</td><td>{{ $order->receiver_mobile_2 ?? 'N/A' }}</td></tr>
-                <tr><td class="label">Address</td><td>{{ $order->receiver_address }}</td></tr>
-                <tr><td class="label">Area</td><td>{{ $order->area->name ?? 'N/A' }}</td></tr>
-                <tr><td class="label">City</td><td>{{ $order->city->name ?? 'N/A' }}</td></tr>
+                <tr><td class="label">{{ __('Shipper') }}</td><td class="value">{!! $shipperName !!}</td></tr>
+                <tr><td class="label">{{ __('Name') }}</td><td class="value">{!! $receiverName !!}</td></tr>
+                <tr><td class="label">{{ __('Mobile 1') }}</td><td class="value">{{ $order->receiver_mobile_1 }}</td></tr>
+                <tr><td class="label">{{ __('Mobile 2') }}</td><td class="value">{{ $order->receiver_mobile_2 ?? 'N/A' }}</td></tr>
+                <tr><td class="label">{{ __('Address') }}</td><td class="value">{!! $receiverAddress !!}</td></tr>
+                <tr><td class="label">{{ __('Area') }}</td><td class="value">{!! $areaName !!}</td></tr>
+                <tr><td class="label">{{ __('City') }}</td><td class="value">{!! $cityName !!}</td></tr>
             </table>
         </div>
 
         <!-- SHIPMENT DETAILS -->
         <div class="section">
-            <div class="section-title">Shipment Details</div>
+            <div class="section-title">{{ __('Shipment Details') }}</div>
             <table class="info-table">
-                <tr><td class="label">Item</td><td>{{ $order->item_name }}</td></tr>
-                <tr><td class="label">Description</td><td>{{ $order->description ?? 'N/A' }}</td></tr>
-                <tr><td class="label">Service</td><td>{{ ucfirst(str_replace('_', ' ', $order->service_type)) }}</td></tr>
-                <tr><td class="label">Weight</td><td>{{ $order->weight }} kg</td></tr>
-                <tr><td class="label">Size</td><td>{{ $order->size }}</td></tr>
-                <tr><td class="label">Quantity</td><td>{{ $order->quantity }}</td></tr>
-                <tr><td class="label">Status</td><td>{{ ucfirst(str_replace('_', ' ', $order->status)) }}</td></tr>
-                <tr><td class="label">Open Package</td><td>{{ ucfirst($order->open_package) }}</td></tr>
+                <tr><td class="label">{{ __('Item') }}</td><td class="value">{{ $order->item_name }}</td></tr>
+                <tr><td class="label">{{ __('Description') }}</td><td class="value">{{ $order->description ?? 'N/A' }}</td></tr>
+                <tr><td class="label">{{ __('Service') }}</td><td class="value">{{ ucfirst(str_replace('_', ' ', $order->service_type)) }}</td></tr>
+                <tr><td class="label">{{ __('Weight') }}</td><td class="value">{{ $order->weight }} kg</td></tr>
+                <tr><td class="label">{{ __('Size') }}</td><td class="value">{{ $order->size }}</td></tr>
+                <tr><td class="label">{{ __('Quantity') }}</td><td class="value">{{ $order->quantity }}</td></tr>
+                <tr><td class="label">{{ __('Status') }}</td><td class="value">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</td></tr>
+                <tr><td class="label">{{ __('Open Package') }}</td><td class="value">{{ ucfirst($order->open_package) }}</td></tr>
                 @if($order->status === 'undelivered')
-                    <tr><td class="label">Reason</td><td>{{ ucfirst(str_replace('_', ' ', $order->undelivered_reason)) }}</td></tr>
+                    <tr><td class="label">{{ __('Reason') }}</td><td class="value">{{ ucfirst(str_replace('_', ' ', $order->undelivered_reason)) }}</td></tr>
                 @endif
             </table>
         </div>
@@ -148,8 +184,8 @@
         <!-- FOOTER -->
         <div class="footer">
             <div class="footer-row">
-                <div>Order Ref: {{ $order->reference ?? '-' }}</div>
-                <div>{{ now()->format('Y-m-d H:i') }}</div>
+                <div>{{ __('Order Ref') }}: {{ $order->reference ?? '-' }}</div>
+                <div><strong>{{ __('Generated') }}:</strong> {{ now()->format('Y-m-d H:i') }}</div>
             </div>
         </div>
     </div>

@@ -6,6 +6,8 @@ use App\Filament\Resources\OrderResource\Pages;
 use App\Models\Area;
 use App\Models\Order;
 use App\Models\User;
+use ArPHP\I18N\Arabic;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -517,9 +519,28 @@ class OrderResource extends Resource
                         ->color('primary')
                         ->requiresConfirmation()
                         ->action(function (\Illuminate\Support\Collection $records) {
-                            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('filament.pages.bulk-waybills', [
-                                'orders' => $records,
-                                'language' => 'ar', // switch to 'en' if needed
+                            $Arabic = new Arabic;
+
+                            $orders = $records->map(function ($order) use ($Arabic) {
+                                if (! empty($order->address_ar)) {
+                                    $order->address_ar = $Arabic->utf8Glyphs($order->address_ar);
+                                }
+                                if (! empty($order->city_ar)) {
+                                    $order->city_ar = $Arabic->utf8Glyphs($order->city_ar);
+                                }
+                                if (! empty($order->area_ar)) {
+                                    $order->area_ar = $Arabic->utf8Glyphs($order->area_ar);
+                                }
+                                if (! empty($order->receiver_name)) {
+                                    $order->receiver_name = $Arabic->utf8Glyphs($order->receiver_name);
+                                }
+
+                                return $order;
+                            });
+
+                            $pdf = Pdf::loadView('filament.pages.bulk-waybills', [
+                                'orders' => $orders,
+                                'language' => 'ar',
                             ])
                                 ->setOptions([
                                     'isHtml5ParserEnabled' => true,
@@ -531,10 +552,7 @@ class OrderResource extends Resource
 
                             $fileName = 'waybills_'.now()->format('Y_m_d_His').'.pdf';
 
-                            return response()->streamDownload(
-                                fn () => print ($pdf->output()),
-                                $fileName
-                            );
+                            return response()->streamDownload(fn () => print ($pdf->output()), $fileName);
                         }),
 
                     Tables\Actions\BulkAction::make('print_waybills_x')
@@ -543,11 +561,38 @@ class OrderResource extends Resource
                         ->color('primary')
                         ->requiresConfirmation()
                         ->action(function (\Illuminate\Support\Collection $records) {
-                            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('filament.pages.bulk-waybills-x', [
-                                'orders' => $records,
-                            ]);
+                            $Arabic = new Arabic;
 
-                            $fileName = 'waybills_'.now()->format('Y_m_d_His').'.pdf';
+                            $orders = $records->map(function ($order) use ($Arabic) {
+                                if (! empty($order->address_ar)) {
+                                    $order->address_ar = $Arabic->utf8Glyphs($order->address_ar);
+                                }
+                                if (! empty($order->city_ar)) {
+                                    $order->city_ar = $Arabic->utf8Glyphs($order->city_ar);
+                                }
+                                if (! empty($order->area_ar)) {
+                                    $order->area_ar = $Arabic->utf8Glyphs($order->area_ar);
+                                }
+                                if (! empty($order->receiver_name)) {
+                                    $order->receiver_name = $Arabic->utf8Glyphs($order->receiver_name);
+                                }
+
+                                return $order;
+                            });
+
+                            $pdf = Pdf::loadView('filament.pages.bulk-waybills-x', [
+                                'orders' => $orders,
+                                'language' => 'ar',
+                            ])
+                                ->setOptions([
+                                    'isHtml5ParserEnabled' => true,
+                                    'isRemoteEnabled' => true,
+                                    'defaultFont' => 'Amiri',
+                                    'isFontSubsettingEnabled' => true,
+                                    'dpi' => 150,
+                                ]);
+
+                            $fileName = 'waybills_x_'.now()->format('Y_m_d_His').'.pdf';
 
                             return response()->streamDownload(
                                 fn () => print ($pdf->output()),

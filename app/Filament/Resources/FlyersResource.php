@@ -59,7 +59,17 @@ class FlyersResource extends Resource
                     ->color('success')
                     ->form([
                         Forms\Components\TextInput::make('customer_name')->required(),
-                        Forms\Components\TextInput::make('customer_phone')->required(),
+
+                        Forms\Components\TextInput::make('customer_phone')
+                            ->label('Customer Phone')
+                            ->required()
+                            ->tel()
+                            ->mask('99999999999')
+                            ->maxLength(11)
+                            ->minLength(11)
+                            ->rule('regex:/^(010|011|012|015)[0-9]{8}$/')
+                            ->validationAttribute('Customer Phone')
+                            ->helperText('Phone must start with 010, 011, 012, or 015 and be 11 digits long.'),
 
                         Forms\Components\Textarea::make('receiver_address')
                             ->label('Receiver Address'),
@@ -160,10 +170,11 @@ class FlyersResource extends Resource
                             ->send();
                     }),
 
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
             ]);
+
+        // ->bulkActions([
+        //     Tables\Actions\DeleteBulkAction::make(),
+        // ]);
     }
 
     public static function getRelations(): array
@@ -176,7 +187,7 @@ class FlyersResource extends Resource
         return [
             'index' => Pages\ListFlyers::route('/'),
             'create' => Pages\CreateFlyers::route('/create'),
-            'edit' => Pages\EditFlyers::route('/{record}/edit'),
+            // 'edit' => Pages\EditFlyers::route('/{record}/edit'),
         ];
     }
 }

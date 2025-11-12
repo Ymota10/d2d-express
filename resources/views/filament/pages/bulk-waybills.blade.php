@@ -74,25 +74,38 @@
             padding: 0 10px;
         }
 
+        /* ✅ Fixed alignment for info rows */
         .info-row {
-            margin: 3px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 4px 0;
+            gap: 10px;
             direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
-            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
             unicode-bidi: bidi-override;
             word-break: break-word;
         }
 
-        .info-row strong {
-            display: inline-block;
-            min-width: 140px;
+        .info-label {
+            font-weight: bold;
+            min-width: 160px;
+            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
+        }
+
+        .info-value {
+            flex: 1;
+            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
+            font-family: 'Amiri', DejaVu Sans, sans-serif;
+            line-height: 1.4;
         }
 
         .amount {
             border: 2px solid #000;
-            padding: 5px;
+            padding: 8px;
             font-weight: bold;
             font-size: 13px;
             text-align: center;
+            font-family: 'Amiri', DejaVu Sans, sans-serif;
         }
 
         .footer {
@@ -102,8 +115,7 @@
             padding-top: 6px;
             margin-top: 8px;
             font-size: 10px;
-            direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
-            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
+            font-family: 'Amiri', DejaVu Sans, sans-serif;
         }
 
         .bottom-barcode {
@@ -118,7 +130,20 @@
     </style>
 </head>
 <body>
+@php
+    use ArPHP\I18N\Arabic;
+    $arabic = new Arabic();
+@endphp
+
 @foreach ($orders as $order)
+    @php
+        $shipperName = $arabic->utf8Glyphs($order->user->name ?? '');
+        $receiverName = $arabic->utf8Glyphs($order->receiver_name ?? '');
+        $receiverAddress = $arabic->utf8Glyphs($order->receiver_address ?? '');
+        $areaName = $arabic->utf8Glyphs($order->area->name ?? '');
+        $cityName = $arabic->utf8Glyphs($order->city->name ?? '');
+    @endphp
+
     <div class="waybill">
         <div class="top-row">
             <div class="logo">
@@ -132,23 +157,72 @@
 
         <div class="main-grid">
             <div class="left-col">
-                <div class="info-row"><strong>{{ __('Shipper Name') }}:</strong> {{ $order->user->name ?? 'N/A' }}</div>
-                <div class="info-row"><strong>{{ __('Receiver Name') }}:</strong> {{ $order->receiver_name }}</div>
-                <div class="info-row"><strong>{{ __('Mobile 1') }}:</strong> {{ $order->receiver_mobile_1 }}</div>
-                <div class="info-row"><strong>{{ __('Mobile 2') }}:</strong> {{ $order->receiver_mobile_2 ?? 'N/A' }}</div>
-                <div class="info-row"><strong>{{ __('Address') }}:</strong> <span dir="auto">{{ $order->receiver_address }}</span></div>
-                <div class="info-row"><strong>{{ __('Area') }}:</strong> {{ $order->area->name ?? 'N/A' }}</div>
-                <div class="info-row"><strong>{{ __('City') }}:</strong> {{ $order->city->name ?? 'N/A' }}</div>
-                <div class="info-row"><strong>{{ __('Item Name') }}:</strong> {{ $order->item_name }}</div>
-                <div class="info-row"><strong>{{ __('Description') }}:</strong> {{ $order->description ?? 'N/A' }}</div>
-                <div class="info-row"><strong>{{ __('Service Type') }}:</strong> {{ ucfirst(str_replace('_', ' ', $order->service_type)) }}</div>
-                <div class="info-row"><strong>{{ __('Weight') }}:</strong> {{ $order->weight }} kg</div>
-                <div class="info-row"><strong>{{ __('Size') }}:</strong> {{ $order->size }}</div>
-                <div class="info-row"><strong>{{ __('Quantity') }}:</strong> {{ $order->quantity }}</div>
-                <div class="info-row"><strong>{{ __('Status') }}:</strong> {{ ucfirst(str_replace('_', ' ', $order->status)) }}</div>
-                <div class="info-row"><strong>{{ __('Open Package') }}:</strong> {{ ucfirst($order->open_package) }}</div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Shipper Name') }}:</div>
+                    <div class="info-value">{!! $shipperName !!}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Receiver Name') }}:</div>
+                    <div class="info-value">{!! $receiverName !!}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Mobile 1') }}:</div>
+                    <div class="info-value">{{ $order->receiver_mobile_1 }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Mobile 2') }}:</div>
+                    <div class="info-value">{{ $order->receiver_mobile_2 ?? 'N/A' }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Address') }}:</div>
+                    <div class="info-value">{!! $receiverAddress !!}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Area') }}:</div>
+                    <div class="info-value">{!! $areaName !!}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('City') }}:</div>
+                    <div class="info-value">{!! $cityName !!}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Item Name') }}:</div>
+                    <div class="info-value">{{ $order->item_name }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Description') }}:</div>
+                    <div class="info-value">{{ $order->description ?? 'N/A' }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Service Type') }}:</div>
+                    <div class="info-value">{{ ucfirst(str_replace('_', ' ', $order->service_type)) }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Weight') }}:</div>
+                    <div class="info-value">{{ $order->weight }} kg</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Size') }}:</div>
+                    <div class="info-value">{{ $order->size }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Quantity') }}:</div>
+                    <div class="info-value">{{ $order->quantity }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Status') }}:</div>
+                    <div class="info-value">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">{{ __('Open Package') }}:</div>
+                    <div class="info-value">{{ ucfirst($order->open_package) }}</div>
+                </div>
+
                 @if($order->status === 'undelivered')
-                    <div class="info-row"><strong>{{ __('Undelivered Reason') }}:</strong> {{ ucfirst(str_replace('_', ' ', $order->undelivered_reason)) }}</div>
+                    <div class="info-row">
+                        <div class="info-label">{{ __('Undelivered Reason') }}:</div>
+                        <div class="info-value">{{ ucfirst(str_replace('_', ' ', $order->undelivered_reason)) }}</div>
+                    </div>
                 @endif
             </div>
 
@@ -160,7 +234,7 @@
         <div class="footer">
             <div>{{ __('Notes') }}: -</div>
             <div>{{ __('Order Ref') }}: {{ $order->reference ?? '-' }}</div>
-            <div class="info-row"><strong>{{ __('Generated') }}:</strong> {{ now()->format('Y-m-d H:i') }}</div>
+            <div><strong>{{ __('Generated') }}:</strong> {{ now()->format('Y-m-d H:i') }}</div>
         </div>
 
         <div class="bottom-barcode">
