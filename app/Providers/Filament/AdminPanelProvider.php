@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
                 'fourth' => '#011414',
                 'fifth' => '#00A4BF',
                 'six' => '#1271FF',
+                'seven' => '#d1001f',
                 'brown' => '#964B00',
                 'lime' => '#50C878',
                 'Darkgreen' => '#008000',

@@ -168,6 +168,7 @@ class OrderResource extends Resource
                                 'partial_return' => 'Partial Return',
                                 'time_scheduled' => 'Time Scheduled',
                                 'undelivered' => 'Undelivered',
+                                'returned_and_cost_paid' => 'Returned and cost paid',
                                 'returned_to_warehouse' => 'Returned to Warehouse',
                                 'returned_to_shipper' => 'Returned to Shipper',
                             ])
@@ -251,6 +252,7 @@ class OrderResource extends Resource
                             'partial_return' => 'Partial Return',
                             'time_scheduled' => 'Time Scheduled',
                             'undelivered' => 'Undelivered',
+                            'returned_and_cost_paid' => 'Returned and cost paid',
                             'returned_to_warehouse' => 'Returned to Warehouse',
                             'returned_to_shipper' => 'Returned to Shipper',
                             default => ucfirst(str_replace('_', ' ', $state)),
@@ -265,6 +267,7 @@ class OrderResource extends Resource
                             'partial_return' => 'brown', // green
                             'time_scheduled' => 'secondary',    // purple (requires custom theme if not default)
                             'undelivered' => 'danger',       // red
+                            'returned_and_cost_paid' => 'seven',
                             'returned_to_warehouse' => 'fifth', //
                             'returned_to_shipper' => 'fourth', // Black
                             default => 'secondary',
@@ -306,6 +309,7 @@ class OrderResource extends Resource
                         'partial_return' => 'Partial Return',
                         'time_scheduled' => 'Time Scheduled',
                         'undelivered' => 'Undelivered',
+                        'returned_and_cost_paid' => 'Returned and cost paid',
                         'returned_to_warehouse' => 'Returned to Warehouse',
                         'returned_to_shipper' => 'Returned to Shipper',
                     ])
@@ -430,6 +434,7 @@ class OrderResource extends Resource
                                         'partial_return' => 'Partial Return',
                                         'time_scheduled' => 'Time Scheduled',
                                         'undelivered' => 'Undelivered',
+                                        'returned_and_cost_paid' => 'Returned and cost paid',
                                         'returned_to_warehouse' => 'Returned to Warehouse',
                                         'returned_to_shipper' => 'Returned to Shipper',
                                     ])
