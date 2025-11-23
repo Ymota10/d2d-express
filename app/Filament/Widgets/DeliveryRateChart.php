@@ -36,6 +36,7 @@ class DeliveryRateChart extends ChartWidget
 
         $inProgressStatuses = [
             'out_for_delivery',
+            'returned_to_warehouse',
             'time_scheduled',
             'warehouse_recieved',
             'pickup_request',
@@ -51,12 +52,12 @@ class DeliveryRateChart extends ChartWidget
 
         // ✅ Count successful and unsuccessful deliveries
         $successfulOrders = (clone $ordersQuery)
-            ->where('status', 'success_delivery')
+            ->whereIn('status', ['success_delivery', 'partial_return'])
             ->whereNotIn('status', $inProgressStatuses)
             ->count();
 
         $unsuccessfulOrders = (clone $ordersQuery)
-            ->where('status', 'undelivered')
+            ->whereIn('status', ['undelivered', 'returned_and_cost_paid'])
             ->whereNotIn('status', $inProgressStatuses)
             ->count();
 

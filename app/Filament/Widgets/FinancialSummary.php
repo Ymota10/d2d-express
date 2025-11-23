@@ -22,20 +22,20 @@ class FinancialSummary extends BaseWidget
 
         // COLLECTED COD only for success_delivery orders AND is_collected = 0
         $totalCodAmount = (clone $ordersQuery)
-            ->where('status', 'success_delivery')
+            ->whereIn('status', ['success_delivery', 'undelivered'])
             ->where('is_collected', 0)
             ->sum('cod_amount');
 
         // D2D REVENUE (before courier commission) AND is_collected = 0
         $d2dRevenue = (clone $ordersQuery)
-            ->whereIn('status', ['success_delivery', 'undelivered'])
+            ->whereIn('status', ['success_delivery', 'undelivered', 'partial_return'])
             ->where('is_collected', 0)
             ->sum('delivery_cost');
 
         // OPEN PACKAGE FEES AND is_collected = 0
         $openPackageTotal = (clone $ordersQuery)
             ->where('open_package', 'yes')
-            ->whereIn('status', ['success_delivery', 'undelivered'])
+            ->whereIn('status', ['success_delivery', 'undelivered', 'partial_return'])
             ->where('is_collected', 0)
             ->sum('open_package_fee');
 
@@ -44,10 +44,10 @@ class FinancialSummary extends BaseWidget
 
         $stats = [
             Stat::make('DELIVERED', (clone $ordersQuery)
-                ->where('status', 'success_delivery')
+                ->whereIn('status', ['success_delivery', 'partial_return'])
                 ->where('is_collected', 0)
                 ->count())
-                ->description('Success Delivery!')
+                ->description('Success Delivery')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success')
                 ->chart([20, 23, 26, 30, 35, 39, 33])

@@ -41,6 +41,8 @@ class AdminPanelProvider extends PanelProvider
                 'lime' => '#50C878',
                 'Darkgreen' => '#008000',
                 'neon' => '#0FFF50',
+                'orange' => '#29AB87',
+
             ])
             ->discoverResources(
                 in: app_path('Filament/Resources'),

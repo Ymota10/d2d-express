@@ -37,8 +37,7 @@ class FinancialAnalysisResource extends Resource
 
         // Base query: success_delivery + undelivered (both visible)
         $query = Order::query()
-            ->whereIn('status', ['success_delivery', 'undelivered']);
-
+            ->whereIn('status', ['success_delivery', 'undelivered', 'partial_return']);
         // Restrict to shipper’s own orders if not admin
         if ($user->isShipper()) {
             $query->where('users_id', $user->id);
@@ -86,7 +85,7 @@ class FinancialAnalysisResource extends Resource
                         'warehouse_received' => 'Warehouse Received',
                         'out_for_delivery' => 'Out for Delivery',
                         'success_delivery' => 'Success Delivery',
-                        'partial_return' => 'Partial Return',
+                        'partial_return' => 'Partial Delivery',
                         'time_scheduled' => 'Time Scheduled',
                         'undelivered' => 'Undelivered',
                         'returned_to_warehouse' => 'Returned to Warehouse',
@@ -98,7 +97,7 @@ class FinancialAnalysisResource extends Resource
                         'warehouse_received' => 'six',
                         'out_for_delivery' => 'third',
                         'success_delivery' => 'success',
-                        'partial_return' => 'brown',
+                        'partial_return' => 'orange',
                         'time_scheduled' => 'secondary',
                         'undelivered' => 'danger',
                         'returned_to_warehouse' => 'fifth',

@@ -17,7 +17,9 @@ class AverageDeliveryTimeChart extends ChartWidget
         if ($this->averageHours === 0) {
             return new HtmlString('<div class="flex flex-col items-center justify-center space-y-2">
                 <span class="text-lg font-semibold">'.static::$heading.'</span>
-                <span class="inline-block px-3 py-1 text-sm font-bold rounded-full shadow-md bg-gray-500 text-white">
+                <span class="inline-block px-3 py-1 text-sm font-bold rounded-full shadow-md 
+                    bg-gray-500 
+                    !text-black dark:!text-white">
                     No Data
                 </span>
             </div>');
@@ -29,7 +31,9 @@ class AverageDeliveryTimeChart extends ChartWidget
         return new HtmlString('
             <div class="flex flex-col items-center justify-center space-y-2">
                 <span class="text-lg font-semibold">'.static::$heading.'</span>
-                <span class="inline-block px-3 py-1 text-sm font-bold rounded-full shadow-md bg-blue-600 text-white">
+                <span class="inline-block px-3 py-1 text-sm font-bold rounded-full shadow-md 
+                    bg-blue-600 
+                    !text-black dark:!text-white">
                     '.$days.' Day'.($days !== 1 ? 's' : '').', '.$hours.' H
                 </span>
             </div>
@@ -59,10 +63,13 @@ class AverageDeliveryTimeChart extends ChartWidget
             ];
         }
 
-        // ✅ Average hours between creation & success_delivery
+        // Calculate average actual delivery time
         $this->averageHours = (float) $successfulOrders
             ->map(fn ($order) => $order->created_at->diffInHours($order->updated_at))
             ->avg();
+
+        // ✅ CAP: Never exceed 55 hours (2 days + 7 hours)
+        $this->averageHours = min($this->averageHours, 55);
 
         // Convert to days & cap at 5 for donut segments
         $avgDays = min($this->averageHours / 24, 5.0);
@@ -137,9 +144,25 @@ class AverageDeliveryTimeChart extends ChartWidget
                 'legend' => [
                     'display' => true,
                     'position' => 'bottom',
+                    'labels' => [
+                        // Light Mode
+                        'color' => 'black',
+                    ],
                 ],
                 'tooltip' => [
                     'enabled' => true,
+                    // Light mode text
+                    'titleColor' => 'black',
+                    'bodyColor' => 'black',
+
+                    // Dark mode text (Tailwind dark)
+                    'titleColor' => 'function() {
+                        return document.documentElement.classList.contains("dark") ? "#fff" : "#000";
+                    }',
+                    'bodyColor' => 'function() {
+                        return document.documentElement.classList.contains("dark") ? "#fff" : "#000";
+                    }',
+
                     'callbacks' => [
                         'label' => 'function(context) {
                             var value = context.raw ?? 0;

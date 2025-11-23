@@ -32,13 +32,24 @@ class PaymentReportResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id'),
                 Tables\Columns\TextColumn::make('user.name')->label('Created By'),
+                Tables\Columns\TextColumn::make('shipper.name')->label('Shipper'),
                 Tables\Columns\TextColumn::make('total_cod')->money('EGP'),
                 Tables\Columns\TextColumn::make('total_delivery_cost')->money('EGP'),
                 Tables\Columns\TextColumn::make('extra_fees')->money('EGP'),
                 Tables\Columns\TextColumn::make('final_amount')->money('EGP'),
                 Tables\Columns\TextColumn::make('created_at')->dateTime(),
             ])
-            ->filters([])
+            ->filters([
+                // 🔍 Filter by Shipper
+                Tables\Filters\SelectFilter::make('shipper_id')
+                    ->label('Shipper')
+                    ->options(
+                        \App\Models\User::where('management', 'shipper')
+                            ->pluck('name', 'id')
+                    )
+                    ->searchable()
+                    ->visible(fn () => auth()->user()?->management === 'admin'),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->url(fn ($record) => static::getUrl('view', ['record' => $record])),
