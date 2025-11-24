@@ -22,7 +22,7 @@ class FinancialSummary extends BaseWidget
 
         // COLLECTED COD only for success_delivery orders AND is_collected = 0
         $totalCodAmount = (clone $ordersQuery)
-            ->whereIn('status', ['success_delivery', 'undelivered'])
+            ->whereIn('status', ['success_delivery', 'partial_return'])
             ->where('is_collected', 0)
             ->sum('cod_amount');
 

@@ -171,7 +171,9 @@ class FinancialAnalysisResource extends Resource
                         ->form(function ($records) {
                             $records = $records->where('is_collected', false);
 
-                            $totalCod = $records->where('status', 'success_delivery')->sum('cod_amount');
+                            $totalCod = $records
+                                ->whereIn('status', ['success_delivery', 'partial_return'])
+                                ->sum('cod_amount');
                             $totalShipping = $records->sum('delivery_cost');
                             $count = $records->count();
 
@@ -206,7 +208,9 @@ class FinancialAnalysisResource extends Resource
                         ->action(function ($records, array $data) {
                             $records = $records->where('is_collected', false);
 
-                            $totalCod = $records->where('status', 'success_delivery')->sum('cod_amount');
+                            $totalCod = $records
+                                ->whereIn('status', ['success_delivery', 'partial_return'])
+                                ->sum('cod_amount');
                             $totalShipping = $records->sum('delivery_cost');
                             $openPackageFees = $records->sum('open_package_fee'); // ✅ deduct open package fee
                             $extra = 0;
