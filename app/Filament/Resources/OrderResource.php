@@ -299,6 +299,24 @@ class OrderResource extends Resource
 
             ])
             ->filters([
+
+                // 📅 Date Range Filter
+                Tables\Filters\Filter::make('date_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')->label('From Date'),
+                        Forms\Components\DatePicker::make('to')->label('To Date'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when(
+                            $data['from'] ?? null,
+                            fn ($q, $date) => $q->whereDate('created_at', '>=', $date)
+                        )
+                        ->when(
+                            $data['to'] ?? null,
+                            fn ($q, $date) => $q->whereDate('created_at', '<=', $date)
+                        )
+                    ),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -312,6 +330,16 @@ class OrderResource extends Resource
                         'returned_and_cost_paid' => 'Returned and cost paid',
                         'returned_to_warehouse' => 'Returned to Warehouse',
                         'returned_to_shipper' => 'Returned to Shipper',
+                    ])
+                    ->searchable()
+                    ->multiple(),
+
+                Tables\Filters\SelectFilter::make('service_type')
+                    ->label('Service Type')
+                    ->options([
+                        'normal_cod' => 'Normal COD',
+                        'replacement' => 'Replacement',
+                        'refund' => 'Refund',
                     ])
                     ->searchable()
                     ->multiple(),
