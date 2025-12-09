@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrderResource\Pages;
 use App\Models\Area;
+use App\Models\AreaTier1;
+use App\Models\AreaTier2;
 use App\Models\Order;
 use App\Models\User;
 use ArPHP\I18N\Arabic;
@@ -26,17 +28,10 @@ class OrderResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        // If user is shipper -> only see his own orders
         if (Auth::user()->management === 'shipper') {
             return $query->where('users_id', Auth::id());
         }
 
-        // // If courier -> optionally restrict here (for example, nothing or assigned only)
-        // if (Auth::user()->management === 'courier') {
-        //     return $query->where('user_id', Auth::id()); // adjust if needed
-        // }
-
-        // Admin -> see everything
         return $query;
     }
 
@@ -49,6 +44,8 @@ class OrderResource extends Resource
     {
         return $form
             ->schema([
+
+                // Shipper select
                 Forms\Components\Select::make('users_id')
                     ->label('Shipper')
                     ->options(User::where('management', 'shipper')->pluck('name', 'id'))
@@ -57,46 +54,79 @@ class OrderResource extends Resource
                     ->required()
                     ->default(fn () => Auth::user()->management === 'shipper' ? auth()->id() : null)
                     ->disabled(fn () => Auth::user()->management !== 'admin')
-                    ->dehydrated(true), // ✅ ensures value is still sent even if disabled
+                    ->dehydrated(true),
 
+                // Area select
                 Forms\Components\Select::make('area_id')
                     ->label('Area')
-                    ->relationship('area', 'name')
                     ->searchable()
                     ->preload()
-                    ->getOptionLabelUsing(fn ($value): ?string => optional(Area::find($value))
-                        ?->name.' - '.optional(Area::find($value))
-                        ?->name_ar
-                    )
+                    ->options(function () {
+                        $branchId = auth()->user()->branch_id ?? null;
+
+                        if ($branchId == 2) {
+                            return AreaTier1::pluck('name', 'id');
+                        } elseif ($branchId == 4) {
+                            return AreaTier2::pluck('name', 'id');
+                        } else {
+                            return Area::pluck('name', 'id');
+                        }
+                    })
+                    ->getOptionLabelUsing(function ($value) {
+                        $branchId = auth()->user()->branch_id ?? null;
+
+                        if ($branchId == 2) {
+                            $area = AreaTier1::find($value);
+                        } elseif ($branchId == 4) {
+                            $area = AreaTier2::find($value);
+                        } else {
+                            $area = Area::find($value);
+                        }
+
+                        return $area ? $area->name.' - '.$area->name_ar : null;
+                    })
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                        if ($state) {
-                            $area = Area::find($state);
-                            if ($area) {
-                                // Check if current service type is "replacement"
-                                if ($get('service_type') === 'replacement') {
-                                    $set('delivery_cost', $area->exchange_cost);
-                                } else {
-                                    $set('delivery_cost', $area->delivery_cost);
-                                }
-                                $set('city_id', $area->city_id);
-                            }
+                        if (! $state) {
+                            return;
                         }
+
+                        $userId = $get('users_id');
+                        $branchId = User::find($userId)?->branch_id ?? null;
+
+                        if ($branchId == 2) {
+                            $area = AreaTier1::find($state);
+                        } elseif ($branchId == 4) {
+                            $area = AreaTier2::find($state);
+                        } else {
+                            $area = Area::find($state);
+                        }
+
+                        if (! $area) {
+                            return;
+                        }
+
+                        if ($get('service_type') === 'replacement') {
+                            $set('delivery_cost', $area->exchange_cost);
+                        } else {
+                            $set('delivery_cost', $area->delivery_cost);
+                        }
+
+                        $set('city_id', $area->city_id);
                     }),
 
                 Forms\Components\Hidden::make('city_id'),
 
+                // Receiver Info section
                 Forms\Components\Section::make('Receiver Info')->schema([
-
                     Forms\Components\TextInput::make('receiver_mobile_1')
                         ->label('Receiver Mobile 1')
                         ->numeric()
                         ->required()
-                        ->rule('regex:/^(010|011|012|015)[0-9]{8}$/') // ✅ must start with 010, 011, 012, 015 + 8 digits
+                        ->rule('regex:/^(010|011|012|015)[0-9]{8}$/')
                         ->maxLength(11)
-                        ->validationAttribute('Receiver Mobile 1'), // ✅ makes error message look nice
-                    // ->helperText('Must be 11 digits starting with 010, 011, 012, or 015.'),
+                        ->validationAttribute('Receiver Mobile 1'),
 
                     Forms\Components\TextInput::make('receiver_mobile_2')
                         ->label('Receiver Mobile 2')
@@ -107,12 +137,12 @@ class OrderResource extends Resource
 
                     Forms\Components\TextInput::make('receiver_name')
                         ->maxLength(255)
-                        ->required(),            // <-- required here
+                        ->required(),
 
                     Forms\Components\TextInput::make('client_id'),
 
                     Forms\Components\Textarea::make('receiver_address')
-                        ->required(),            // <-- required here
+                        ->required(),
 
                     Forms\Components\TextInput::make('delivery_cost')
                         ->numeric()
@@ -121,13 +151,18 @@ class OrderResource extends Resource
                         ->dehydrated(true),
                 ])->columns(2),
 
+                // Shipment Data section
                 Forms\Components\Section::make('Shipment Data')->schema([
                     Forms\Components\TextInput::make('item_name')->maxLength(255),
                     Forms\Components\Textarea::make('description'),
                     Forms\Components\Textarea::make('notes'),
                     Forms\Components\TextInput::make('order_id')->maxLength(255),
                     Forms\Components\TextInput::make('flyer_no')->maxLength(255),
-                    Forms\Components\TextInput::make('cod_amount')->numeric()->placeholder('Including Shipping Fees')->required(),
+                    Forms\Components\TextInput::make('cod_amount')
+                        ->numeric()
+                        ->placeholder('Including Shipping Fees')
+                        ->required(),
+
                     Forms\Components\Select::make('service_type')
                         ->options([
                             'normal_cod' => 'Normal COD',
@@ -138,25 +173,35 @@ class OrderResource extends Resource
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
                             $areaId = $get('area_id');
-                            if ($areaId) {
-                                $area = \App\Models\Area::find($areaId);
-                                if ($area) {
-                                    if ($state === 'replacement') {
-                                        $set('delivery_cost', $area->exchange_cost);
-                                    } else {
-                                        $set('delivery_cost', $area->delivery_cost);
-                                    }
-                                }
+                            $userId = $get('users_id');
+
+                            if (! $areaId || ! $userId) {
+                                return;
                             }
+
+                            $branchId = User::find($userId)?->branch_id ?? null;
+
+                            if ($branchId == 2) {
+                                $area = AreaTier1::find($areaId);
+                            } elseif ($branchId == 4) {
+                                $area = AreaTier2::find($areaId);
+                            } else {
+                                $area = Area::find($areaId);
+                            }
+
+                            if (! $area) {
+                                return;
+                            }
+
+                            $set('delivery_cost', $state === 'replacement' ? $area->exchange_cost : $area->delivery_cost);
                         }),
 
                     Forms\Components\TextInput::make('weight')->numeric()->placeholder('in kilograms'),
-
                     Forms\Components\TextInput::make('size')->maxLength(255),
-                    Forms\Components\TextInput::make('quantity')->numeric()->default(1)
-                        ->required(),
+                    Forms\Components\TextInput::make('quantity')->numeric()->default(1)->required(),
                 ])->columns(3),
 
+                // Order Status section
                 Forms\Components\Section::make('Order Status')
                     ->schema([
                         Forms\Components\Select::make('status')
@@ -174,21 +219,16 @@ class OrderResource extends Resource
                             ])
                             ->required()
                             ->reactive()
-                            ->default('pickup_request') // ✅ non-admins get default value automatically
-                            ->visible(fn () => auth()->user()?->management === 'admin'), // ✅ only admin sees it
+                            ->default('pickup_request')
+                            ->visible(fn () => auth()->user()?->management === 'admin'),
 
                         Forms\Components\Select::make('open_package')
                             ->label('Open Package')
-                            ->options([
-                                'yes' => 'Yes',
-                                'no' => 'No',
-                            ])
+                            ->options(['yes' => 'Yes', 'no' => 'No'])
                             ->default('no')
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                $set('open_package_fee', $state === 'yes' ? 5 : 0);
-                            }),
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('open_package_fee', $state === 'yes' ? 5 : 0)),
 
                         Forms\Components\TextInput::make('open_package_fee')
                             ->label('Open Package Fee')
@@ -208,7 +248,6 @@ class OrderResource extends Resource
                             ->visible(fn ($get) => $get('status') === 'undelivered'),
                     ])
                     ->columns(2),
-
             ]);
     }
 
@@ -272,6 +311,38 @@ class OrderResource extends Resource
                             'returned_to_shipper' => 'fourth', // Black
                             default => 'secondary',
                         };
+                    }),
+
+                Tables\Columns\BadgeColumn::make('attempts_visual')
+                    ->label('Attempts')
+                    ->getStateUsing(function ($record) {
+                        return $record->attempts()->count();
+                    })
+                    ->formatStateUsing(function ($state) {
+                        return $state.' / 3';
+                    })
+                    ->colors([
+                        'success' => fn ($state) => $state === 1,   // ✅ 1/3 = green
+                        'warning' => fn ($state) => $state === 2,   // ✅ 2/3 = yellow
+                        'danger' => fn ($state) => $state >= 3,    // ✅ 3+/3 = red
+                    ])
+                    ->icons([
+                        'heroicon-o-check-circle' => fn ($state) => $state === 1,
+                        'heroicon-o-arrow-path' => fn ($state) => $state === 2,
+                        'heroicon-o-exclamation-triangle' => fn ($state) => $state >= 3,
+                    ])
+                    ->sortable(
+                        query: function ($query, $direction) {
+                            $query->withCount('attempts')
+                                ->orderBy('attempts_count', $direction);
+                        }
+                    )
+                    ->tooltip(function ($record) {
+                        $last = $record->attempts()->latest()->first();
+
+                        return $last
+                            ? 'Last attempt: '.ucfirst(str_replace('_', ' ', $last->status))
+                            : 'No attempts yet';
                     }),
 
                 Tables\Columns\TextColumn::make('undelivered_reason')

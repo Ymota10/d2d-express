@@ -72,15 +72,25 @@ class Order extends Model
         return $this->belongsTo(\App\Models\City::class, 'city_id');
     }
 
+    /**
+     * Dynamic area relationship
+     * Branch 2 → AreaTier1
+     * Others → Area
+     */
     public function area()
     {
+        $branchId = $this->users?->branch_id ?? $this->shipper?->branch_id ?? null;
+
+        if ($branchId == 2) {
+            return $this->belongsTo(\App\Models\AreaTier1::class, 'area_id');
+        }
+
+        if ($branchId == 4) {
+            return $this->belongsTo(\App\Models\AreaTier2::class, 'area_id');
+        }
+
         return $this->belongsTo(\App\Models\Area::class, 'area_id');
     }
-
-    // public function shipper()
-    // {
-    //     return $this->belongsTo(\App\Models\Shipper::class);
-    // }
 
     public function shipper()
     {
@@ -95,6 +105,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class, 'users_id');
+    }
+
+    public function attempts()
+    {
+        return $this->hasMany(\App\Models\OrderAttempt::class);
     }
 
     protected static function booted()
