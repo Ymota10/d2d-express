@@ -33,7 +33,9 @@ class Cards extends BaseWidget
             ->whereIn('status', ['time_scheduled', 'returned_to_warehouse'])
             ->count();
 
-        $successDelivery = (clone $orderQuery)->where('status', 'success_delivery')->count();
+        $successDelivery = (clone $orderQuery)
+            ->whereIn('status', ['success_delivery', 'partial_return'])
+            ->count();
         $undelivered = (clone $orderQuery)->where('status', 'undelivered')->count();
 
         return array_filter([

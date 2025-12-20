@@ -125,6 +125,7 @@ class FinancialAnalysisResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
             ])
             ->filters([
+
                 // 📅 Date Range Filter
                 Filter::make('date_range')
                     ->form([
@@ -150,12 +151,28 @@ class FinancialAnalysisResource extends Resource
                         ))
                     ),
 
-                // 🧍‍♂️ Shipper Filter (Visible Only for Admins)
+                // 🧍‍♂️ Shipper Filter (Admins only)
                 Tables\Filters\SelectFilter::make('users_id')
                     ->label('Shipper')
-                    ->options(\App\Models\User::where('management', 'shipper')->pluck('name', 'id'))
+                    ->options(
+                        \App\Models\User::where('management', 'shipper')->pluck('name', 'id')
+                    )
                     ->searchable()
                     ->visible(fn () => auth()->user()?->management === 'admin'),
+
+                // 💰 Collected Status Filter
+                Tables\Filters\SelectFilter::make('is_collected')
+                    ->label('Collected Status')
+                    ->options([
+                        1 => 'Collected',
+                        0 => 'Not Collected',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        if ($data['value'] !== null) {
+                            $query->where('is_collected', $data['value']);
+                        }
+                    }),
+
             ])
 
             ->bulkActions([
