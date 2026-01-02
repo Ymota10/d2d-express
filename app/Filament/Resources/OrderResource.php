@@ -243,6 +243,7 @@ class OrderResource extends Resource
                                 'no_answer' => 'No Answer',
                                 'wrong_location' => 'Wrong Location',
                                 'refused_shipment' => 'Refused Shipment',
+                                'consignee_escaped' => 'Consignee Escaped',
                             ])
                             ->required()
                             ->visible(fn ($get) => $get('status') === 'undelivered'),
@@ -380,11 +381,11 @@ class OrderResource extends Resource
                     ->query(fn (Builder $query, array $data): Builder => $query
                         ->when(
                             $data['from'] ?? null,
-                            fn ($q, $date) => $q->whereDate('created_at', '>=', $date)
+                            fn ($q, $date) => $q->whereDate('updated_at', '>=', $date)
                         )
                         ->when(
                             $data['to'] ?? null,
-                            fn ($q, $date) => $q->whereDate('created_at', '<=', $date)
+                            fn ($q, $date) => $q->whereDate('updated_at', '<=', $date)
                         )
                     ),
 
@@ -688,6 +689,7 @@ class OrderResource extends Resource
                                 'orders' => $orders,
                                 'language' => 'ar',
                             ])
+                                ->setPaper([0, 0, 226.77, 300]) // 👈 REQUIRED FOR X PRINTER
                                 ->setOptions([
                                     'isHtml5ParserEnabled' => true,
                                     'isRemoteEnabled' => true,

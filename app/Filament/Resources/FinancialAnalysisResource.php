@@ -37,7 +37,7 @@ class FinancialAnalysisResource extends Resource
 
         // Base query: success_delivery + undelivered (both visible)
         $query = Order::query()
-            ->whereIn('status', ['success_delivery', 'undelivered', 'partial_return']);
+            ->whereIn('status', ['success_delivery', 'undelivered', 'returned_to_shipper', 'partial_return']);
         // Restrict to shipper’s own orders if not admin
         if ($user->isShipper()) {
             $query->where('users_id', $user->id);
@@ -133,8 +133,8 @@ class FinancialAnalysisResource extends Resource
                         Forms\Components\DatePicker::make('to')->label('To Date'),
                     ])
                     ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['from'], fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
-                        ->when($data['to'], fn ($q, $date) => $q->whereDate('created_at', '<=', $date))
+                        ->when($data['from'], fn ($q, $date) => $q->whereDate('updated_at', '>=', $date))
+                        ->when($data['to'], fn ($q, $date) => $q->whereDate('updated_at', '<=', $date))
                     ),
 
                 // 🔍 Keyword Filter
