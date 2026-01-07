@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <title>D2D Express Waybill</title>
     <style>
+
+@page {
+    size: 80mm auto; /* X Printer (80mm) */
+    margin: 0;
+}
+
         @font-face {
             font-family: 'Amiri';
             src: url('{{ public_path("fonts/Amiri-Regular.ttf") }}') format('truetype');
