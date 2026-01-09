@@ -42,6 +42,7 @@ class AdminPanelProvider extends PanelProvider
                 'Darkgreen' => '#008000',
                 'neon' => '#0FFF50',
                 'orange' => '#29AB87',
+                'partialreturn' => '#FC6A03',
 
             ])
             ->discoverResources(

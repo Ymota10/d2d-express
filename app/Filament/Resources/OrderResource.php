@@ -211,6 +211,7 @@ class OrderResource extends Resource
                                 'out_for_delivery' => 'Out for Delivery',
                                 'success_delivery' => 'Successful Delivery',
                                 'partial_return' => 'Partial Delivery',
+                                'partial_return_2' => 'Partial Return',
                                 'time_scheduled' => 'Time Scheduled',
                                 'undelivered' => 'Undelivered',
                                 'returned_and_cost_paid' => 'Returned and cost paid',
@@ -290,6 +291,7 @@ class OrderResource extends Resource
                             'out_for_delivery' => 'Out for Delivery',
                             'success_delivery' => 'Success Delivery',
                             'partial_return' => 'Partial Delivery',
+                            'partial_return_2' => 'Partial Return',
                             'time_scheduled' => 'Time Scheduled',
                             'undelivered' => 'Undelivered',
                             'returned_and_cost_paid' => 'Returned and cost paid',
@@ -305,6 +307,7 @@ class OrderResource extends Resource
                             'out_for_delivery' => 'third', // light green
                             'success_delivery' => 'success', // green
                             'partial_return' => 'orange', // green
+                            'partial_return_2' => 'partialreturn',
                             'time_scheduled' => 'secondary',    // purple (requires custom theme if not default)
                             'undelivered' => 'danger',       // red
                             'returned_and_cost_paid' => 'seven',
@@ -397,6 +400,7 @@ class OrderResource extends Resource
                         'out_for_delivery' => 'Out for Delivery',
                         'success_delivery' => 'Successful Delivery',
                         'partial_return' => 'Partial Delivery',
+                        'partial_return_2' => 'Partial Return',
                         'time_scheduled' => 'Time Scheduled',
                         'undelivered' => 'Undelivered',
                         'returned_and_cost_paid' => 'Returned and cost paid',
@@ -532,6 +536,7 @@ class OrderResource extends Resource
                                         'out_for_delivery' => 'Out for Delivery',
                                         'success_delivery' => 'Successful Delivery',
                                         'partial_return' => 'Partial Delivery',
+                                        'partial_return_2' => 'Partial Return',
                                         'time_scheduled' => 'Time Scheduled',
                                         'undelivered' => 'Undelivered',
                                         'returned_and_cost_paid' => 'Returned and cost paid',

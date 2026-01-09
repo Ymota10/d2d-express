@@ -19,10 +19,11 @@ class ListBarStats extends BaseWidget
         }
 
         $totalOrders = $query->count();
+
         $totalMoney = $query->sum('cod_amount');
 
         $todayOrders = (clone $query)
-            ->where('status', 'success_delivery')
+            ->whereIn('status', ['success_delivery', 'partial_return'])
             ->whereDate('updated_at', today())
             ->count();
 
