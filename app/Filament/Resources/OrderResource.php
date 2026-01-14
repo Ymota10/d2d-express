@@ -267,7 +267,7 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('area.name')->label('Area')->sortable(),
                 Tables\Columns\TextColumn::make('receiver_address')->sortable(),
                 Tables\Columns\TextColumn::make('receiver_name')->searchable(),
-                Tables\Columns\TextColumn::make('receiver_mobile_1'),
+                Tables\Columns\TextColumn::make('receiver_mobile_1')->searchable(),
                 Tables\Columns\TextColumn::make('item_name'),
                 Tables\Columns\TextColumn::make('cod_amount')->numeric()->sortable(),
                 Tables\Columns\TextColumn::make('service_type')
