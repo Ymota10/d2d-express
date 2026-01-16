@@ -25,6 +25,7 @@ class ListBarStats extends BaseWidget
         $todayOrders = (clone $query)
             ->whereIn('status', ['success_delivery', 'partial_return'])
             ->whereDate('updated_at', today())
+            ->where('is_collected', false)
             ->count();
 
         return [

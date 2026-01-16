@@ -36,7 +36,9 @@ class Cards extends BaseWidget
         $successDelivery = (clone $orderQuery)
             ->whereIn('status', ['success_delivery', 'partial_return'])
             ->count();
-        $undelivered = (clone $orderQuery)->where('status', 'undelivered')->count();
+        $undelivered = (clone $orderQuery)
+            ->whereIn('status', ['undelivered', 'returned_and_cost_paid'])
+            ->count();
 
         return array_filter([
             // ✅ Admin-only stats

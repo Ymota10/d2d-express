@@ -34,33 +34,32 @@ class DeliveryRateChart extends ChartWidget
     {
         $user = auth()->user();
 
-        $inProgressStatuses = [
-            'out_for_delivery',
-            'returned_to_warehouse',
-            'time_scheduled',
-            'warehouse_recieved',
-            'pickup_request',
-        ];
-
-        // ✅ Start query
         $ordersQuery = Order::query();
 
-        // ✅ Non-admin users only see their own orders
         if (! $user->isAdmin()) {
             $ordersQuery->where('users_id', $user->id);
         }
 
-        // ✅ Count successful and unsuccessful deliveries
-        $successfulOrders = (clone $ordersQuery)
-            ->whereIn('status', ['success_delivery', 'partial_return'])
-            ->whereNotIn('status', $inProgressStatuses)
+        // ✅ Successful
+        $successDelivery = (clone $ordersQuery)
+            ->where('status', 'success_delivery')
             ->count();
 
-        $unsuccessfulOrders = (clone $ordersQuery)
-            ->whereIn('status', ['undelivered', 'returned_and_cost_paid'])
-            ->whereNotIn('status', $inProgressStatuses)
+        $partialReturn = (clone $ordersQuery)
+            ->where('status', 'partial_return')
             ->count();
 
+        // ❌ Unsuccessful
+        $undelivered = (clone $ordersQuery)
+            ->where('status', 'undelivered')
+            ->count();
+
+        $returnedCostPaid = (clone $ordersQuery)
+            ->where('status', 'returned_and_cost_paid')
+            ->count();
+
+        $successfulOrders = $successDelivery + $partialReturn;
+        $unsuccessfulOrders = $undelivered + $returnedCostPaid;
         $closedOrders = $successfulOrders + $unsuccessfulOrders;
 
         $this->deliveryRate = $closedOrders > 0
@@ -70,19 +69,33 @@ class DeliveryRateChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'data' => [$successfulOrders, $unsuccessfulOrders],
+                    'data' => [
+                        $successDelivery,
+                        $partialReturn,
+                        $undelivered,
+                        $returnedCostPaid,
+                    ],
                     'backgroundColor' => [
-                        'rgba(0, 132, 80, 0.5)',   // ✅ shaded green
-                        'rgba(239, 68, 68, 0.5)', // ✅ shaded red
+                        'rgba(34, 197, 94, 0.6)',  // success_delivery  ✅ (كان partial)
+                        'rgba(0, 132, 80, 0.6)',   // partial_return    ✅ (كان success)
+                        'rgba(220, 38, 38, 0.6)',  // undelivered       ✅ (كان returned)
+                        'rgba(239, 68, 68, 0.6)',  // returned_and_cost_paid ✅ (كان undelivered)
                     ],
                     'borderColor' => [
+                        'rgba(34, 197, 94, 1)',
                         'rgba(0, 132, 80, 1)',
+                        'rgba(220, 38, 38, 1)',
                         'rgba(239, 68, 68, 1)',
                     ],
                     'borderWidth' => 2,
                 ],
             ],
-            'labels' => ['Successful', 'Unsuccessful'],
+            'labels' => [
+                'Success Delivery',
+                'Partial Return',
+                'Undelivered',
+                'Returned (Cost Paid)',
+            ],
         ];
     }
 
