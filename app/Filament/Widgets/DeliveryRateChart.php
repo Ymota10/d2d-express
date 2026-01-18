@@ -92,7 +92,7 @@ class DeliveryRateChart extends ChartWidget
             ],
             'labels' => [
                 'Success Delivery',
-                'Partial Return',
+                'Partial Delivery',
                 'Undelivered',
                 'Returned (Cost Paid)',
             ],
