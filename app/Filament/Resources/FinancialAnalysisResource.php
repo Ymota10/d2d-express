@@ -191,13 +191,36 @@ class FinancialAnalysisResource extends Resource
                             $totalCod = $records
                                 ->whereIn('status', ['success_delivery', 'partial_return'])
                                 ->sum('cod_amount');
+
                             $totalShipping = $records->sum('delivery_cost');
+
                             $count = $records->count();
 
+                            // ✅ count per status
+                            $successCount = $records->where('status', 'success_delivery')->count();
+                            $undeliveredCount = $records->where('status', 'undelivered')->count();
+                            $partialReturnCount = $records->where('status', 'partial_return')->count();
+
                             return [
+
                                 Forms\Components\Placeholder::make('orders_count')
                                     ->label('Total Orders')
                                     ->content($count),
+
+                                // ✅ NEW: Success delivery count
+                                Forms\Components\Placeholder::make('success_delivery_count')
+                                    ->label('Success Delivery')
+                                    ->content($successCount),
+
+                                // ✅ NEW: Undelivered count
+                                Forms\Components\Placeholder::make('undelivered_count')
+                                    ->label('Undelivered')
+                                    ->content($undeliveredCount),
+
+                                // ✅ NEW: Partial return count
+                                Forms\Components\Placeholder::make('partial_return_count')
+                                    ->label('Partial Delivery')
+                                    ->content($partialReturnCount),
 
                                 Forms\Components\Placeholder::make('total_cod')
                                     ->label('Total COD Collected')
