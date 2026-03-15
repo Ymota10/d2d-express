@@ -27,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Order::observe(OrderObserver::class);
-        FulfillmentOrder::observe(FulfillmentOrderObserver::class);
+        // FulfillmentOrder::observe(FulfillmentOrderObserver::class);
 
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->ip());
