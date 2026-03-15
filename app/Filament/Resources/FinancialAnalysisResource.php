@@ -194,6 +194,8 @@ class FinancialAnalysisResource extends Resource
 
                             $totalShipping = $records->sum('delivery_cost');
 
+                            $netValue = $totalCod - $totalShipping; // ✅ NEW
+
                             $count = $records->count();
 
                             // ✅ count per status
@@ -229,6 +231,11 @@ class FinancialAnalysisResource extends Resource
                                 Forms\Components\Placeholder::make('total_shipping')
                                     ->label('Total Shipping Fees')
                                     ->content(number_format($totalShipping, 2).' EGP'),
+
+                                // ✅ NEW NET VALUE
+                                Forms\Components\Placeholder::make('net_value')
+                                    ->label('Net Value')
+                                    ->content(number_format($netValue, 2).' EGP'),
 
                                 Forms\Components\Radio::make('extra_type')
                                     ->label('Extra Fees Type')

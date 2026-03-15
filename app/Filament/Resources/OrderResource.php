@@ -229,7 +229,7 @@ class OrderResource extends Resource
                             ->default('no')
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn ($state, callable $set) => $set('open_package_fee', $state === 'yes' ? 5 : 0)),
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('open_package_fee', $state === 'yes' ? 7 : 0)),
 
                         Forms\Components\TextInput::make('open_package_fee')
                             ->label('Open Package Fee')
