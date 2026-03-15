@@ -7,10 +7,10 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
-// Define the "api" rate limiter
-RateLimiter::for('api', function ($request) {
-    return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-});
+// // Define the "api" rate limiter
+// RateLimiter::for('api', function ($request) {
+//     return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+// });
 
 // Public login route
 Route::post('/login', [AuthController::class, 'login']);

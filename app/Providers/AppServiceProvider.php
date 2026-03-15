@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\FulfillmentOrder;
 use App\Models\Order;
+use App\Observers\FulfillmentOrderObserver;
 use App\Observers\OrderObserver;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,5 +27,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Order::observe(OrderObserver::class);
+        FulfillmentOrder::observe(FulfillmentOrderObserver::class);
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
     }
 }
