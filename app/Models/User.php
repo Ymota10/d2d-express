@@ -21,6 +21,7 @@ class User extends Authenticatable
         'national_id',
         'city_id',
         'branch_id',
+        'shop_id',
         'address',
         'profile_photo',
         'gender',
