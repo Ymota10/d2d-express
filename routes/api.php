@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ShopifyController;
+use App\Http\Controllers\Api\ShopifyWriteController;
 use App\Http\Controllers\Api\WooOrderWebhookController;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -23,6 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Find Shop API
 Route::post('/shopify/find-shop', [ShopifyController::class, 'findShop']);
+
+// Link Shop API
+Route::post('/shopify/link-shop', [ShopifyWriteController::class, 'linkShop']);
 
 // -----------------------------
 // WooCommerce Integration
