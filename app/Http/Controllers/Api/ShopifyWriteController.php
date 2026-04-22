@@ -13,11 +13,11 @@ class ShopifyWriteController extends Controller
     public function linkShop(Request $request)
     {
         $request->validate([
-            'users_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id',
             'shop_id' => 'required|string',
         ]);
 
-        $user = User::find($request->users_id);
+        $user = User::find($request->user_id);
 
         if ($user->shop_id !== null) {
             return response()->json([

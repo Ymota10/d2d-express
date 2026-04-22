@@ -35,7 +35,7 @@ class ShopifyController extends Controller
         return response()->json([
             'status' => true,
             'token' => $token,
-            'users_id' => $user->id,
+            'user' => $user,
 
             // ✅ include shopify settings (if exists)
             'settings' => $settings ? [
