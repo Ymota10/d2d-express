@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShopifySetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class ShopifyController extends Controller
             'shop_id' => 'required|string',
         ]);
 
-        // find user using shop_id
+        // 1. find user using shop_id
         $user = User::where('shop_id', $request->shop_id)->first();
 
         if (! $user) {
@@ -25,13 +26,24 @@ class ShopifyController extends Controller
             ]);
         }
 
-        // create token
+        // 2. create token
         $token = $user->createToken('shopify')->plainTextToken;
+
+        // 3. get shopify settings
+        $settings = ShopifySetting::where('shop_id', $request->shop_id)->first();
 
         return response()->json([
             'status' => true,
             'token' => $token,
             'users_id' => $user->id,
+
+            // ✅ include shopify settings (if exists)
+            'settings' => $settings ? [
+                'id' => $settings->id,
+                'shop_id' => $settings->shop_id,
+                'auto_sync' => $settings->auto_sync,
+                'fulfillment_option' => $settings->fulfillment_option,
+            ] : null,
         ]);
     }
 }

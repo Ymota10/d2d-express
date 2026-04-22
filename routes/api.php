@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\FetchShopifyOrdersController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ShopifyController;
 use App\Http\Controllers\Api\ShopifyWriteController;
+use App\Http\Controllers\Api\UpdateShopifySettingsController;
 use App\Http\Controllers\Api\WooOrderWebhookController;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -27,6 +29,15 @@ Route::post('/shopify/find-shop', [ShopifyController::class, 'findShop']);
 
 // Link Shop API
 Route::post('/shopify/link-shop', [ShopifyWriteController::class, 'linkShop']);
+
+// Update Shopify Settings API
+Route::post('/shopify/update-settings', [UpdateShopifySettingsController::class, 'update']);
+
+// Fetch Shopify Orders API
+Route::get('/shopify/fetch-orders', [FetchShopifyOrdersController::class, 'fetch']);
+
+// Sync Orders API
+Route::get('/shopify/sync-orders', [SyncOrdersController::class, 'sync']);
 
 // -----------------------------
 // WooCommerce Integration
