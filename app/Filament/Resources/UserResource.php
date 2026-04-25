@@ -40,6 +40,7 @@ class UserResource extends Resource
                     'admin' => 'Admin',
                     'courier' => 'Courier',
                     'shipper' => 'Shipper',
+                    'track_express' => 'Track Express',
                 ])
                 ->required(),
 

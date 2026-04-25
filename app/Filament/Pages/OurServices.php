@@ -13,4 +13,9 @@ class OurServices extends Page
     protected static ?string $navigationLabel = 'Our Services';
 
     protected static ?string $title = 'Our Services';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->management !== 'track_express';
+    }
 }
