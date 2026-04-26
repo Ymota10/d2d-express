@@ -238,6 +238,13 @@ class OrderResource extends Resource
                             ->disabled()
                             ->dehydrated(true),
 
+                        Forms\Components\DatePicker::make('time_scheduled_at')
+                            ->label('Scheduled Date')
+                            ->native(false) // optional for better UI
+                            ->displayFormat('Y-m-d')
+                            ->required(fn ($get) => $get('status') === 'time_scheduled')
+                            ->visible(fn ($get) => $get('status') === 'time_scheduled'),
+
                         Forms\Components\Select::make('undelivered_reason')
                             ->options([
                                 'refused_payment' => 'Refused Payment',

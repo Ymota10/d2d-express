@@ -49,6 +49,7 @@ class Order extends Model
         'quantity',
         'status',
         'undelivered_reason',
+        'time_scheduled_at',
 
     ];
 
