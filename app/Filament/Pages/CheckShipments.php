@@ -13,6 +13,11 @@ class CheckShipments extends Page
 
     protected static string $view = 'filament.pages.check-shipments';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->management !== 'track_express';
+    }
+
     public $orders = [];
 
     public $viewingOrder = null;

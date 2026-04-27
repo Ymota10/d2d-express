@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->management === 'courier';
     }
 
+    public function isAdminOrTrackExpress(): bool
+    {
+        return in_array($this->management, ['admin', 'track_express']);
+    }
+
     /** ────────────────────────────────
      *  RELATIONSHIPS
      *  ──────────────────────────────── */

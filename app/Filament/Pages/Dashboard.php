@@ -15,6 +15,11 @@ class Dashboard extends Page
 
     protected static string $view = 'filament-panels::pages.dashboard';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->management !== 'track_express';
+    }
+
     public static function getNavigationLabel(): string
     {
         return static::$navigationLabel ??

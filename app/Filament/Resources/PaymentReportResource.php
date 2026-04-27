@@ -20,6 +20,11 @@ class PaymentReportResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-document-currency-dollar';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->management !== 'track_express';
+    }
+
     public static function form(Form $form): Form
     {
         return $form

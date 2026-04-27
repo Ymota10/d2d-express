@@ -24,6 +24,11 @@ class ComplaintResource extends Resource
 
     protected static ?string $modelLabel = 'Complaint';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->management !== 'track_express';
+    }
+
     public static function getNavigationBadge(): ?string
     {
         $user = Auth::user();

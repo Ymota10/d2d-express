@@ -238,6 +238,13 @@ class OrderResource extends Resource
                             ->disabled()
                             ->dehydrated(true),
 
+                        Forms\Components\DatePicker::make('time_scheduled_at')
+                            ->label('Scheduled Date')
+                            ->native(false) // optional for better UI
+                            ->displayFormat('Y-m-d')
+                            ->required(fn ($get) => $get('status') === 'time_scheduled')
+                            ->visible(fn ($get) => $get('status') === 'time_scheduled'),
+
                         Forms\Components\Select::make('undelivered_reason')
                             ->options([
                                 'refused_payment' => 'Refused Payment',
@@ -392,6 +399,13 @@ class OrderResource extends Resource
                         )
                     ),
 
+                // 🔍 Filter by Shipper
+                Tables\Filters\SelectFilter::make('users_id')
+                    ->label('Shipper')
+                    ->options(User::where('management', 'shipper')->pluck('name', 'id'))
+                    ->searchable()
+                    ->visible(fn () => auth()->user()?->isAdminOrTrackExpress()),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -445,13 +459,6 @@ class OrderResource extends Resource
                     )
                     ),
 
-                // 🔍 Filter by Shipper
-                Tables\Filters\SelectFilter::make('users_id')
-                    ->label('Shipper')
-                    ->options(User::where('management', 'shipper')->pluck('name', 'id'))
-                    ->searchable()
-                    ->visible(fn () => auth()->user()?->management === 'admin'),
-
                 // 🔍 Filter by City
                 Tables\Filters\SelectFilter::make('city_id')
                     ->label('City')
@@ -480,22 +487,23 @@ class OrderResource extends Resource
                             : ($record->status === 'pickup_request' ? 'primary' : 'gray')
                     )
                     ->extraAttributes(fn ($record) => [
-                        'title' => auth()->user()->management !== 'admin' && $record->status !== 'pickup_request'
+                        'title' => (! in_array(auth()->user()->management, ['admin', 'track_express']) && $record->status !== 'pickup_request')
                             ? 'You cannot edit order in this current state'
                             : 'Edit this order',
-                        'style' => auth()->user()->management !== 'admin' && $record->status !== 'pickup_request'
+                        'style' => (! in_array(auth()->user()->management, ['admin', 'track_express']) && $record->status !== 'pickup_request')
                             ? 'cursor:not-allowed; opacity:0.6; pointer-events:auto;'
                             : '',
                     ])
-                    ->action(function ($record, $livewire) {
+                    ->action(function ($record) {
+
                         $user = auth()->user();
 
-                        // ✅ Admins can always edit
-                        if ($user->management === 'admin') {
+                        // ✅ Admin + Track Express can always edit
+                        if (in_array($user->management, ['admin', 'track_express'])) {
                             return redirect(static::getUrl('edit', ['record' => $record]));
                         }
 
-                        // ✅ Non-admins restricted unless pickup_request
+                        // ❌ Others restricted
                         if ($record->status !== 'pickup_request') {
                             \Filament\Notifications\Notification::make()
                                 ->title('You cannot edit order in this current state')
@@ -505,11 +513,11 @@ class OrderResource extends Resource
                             return;
                         }
 
-                        // ✅ Normal edit behavior
                         return redirect(static::getUrl('edit', ['record' => $record]));
                     }),
 
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn () => auth()->user()?->management !== 'track_express'),
 
                 Tables\Actions\Action::make('track')
                     ->label('Order Tracking')
@@ -522,7 +530,7 @@ class OrderResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make(array_filter([
                     // ✅ Only show if user is admin
-                    auth()->user()?->isAdmin()
+                    auth()->user()?->isAdminOrTrackExpress()
                         ? Tables\Actions\BulkAction::make('change_status')
                             ->label('Change Status')
                             ->icon('heroicon-o-strikethrough')
@@ -560,7 +568,8 @@ class OrderResource extends Resource
                             ->requiresConfirmation()
                         : null,
 
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->visible(fn () => auth()->user()?->management !== 'track_express'),
 
                     Tables\Actions\BulkAction::make('export_selected')
                         ->label('Export Selected')

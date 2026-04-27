@@ -26,6 +26,11 @@ class FinancialAnalysisResource extends Resource
 
     protected static ?string $navigationLabel = 'Financial Analysis';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->management !== 'track_express';
+    }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form;
