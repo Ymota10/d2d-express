@@ -34,7 +34,7 @@ Route::post('/shopify/link-shop', [ShopifyWriteController::class, 'linkShop']);
 Route::post('/shopify/update-settings', [UpdateShopifySettingsController::class, 'update']);
 
 // Fetch Shopify Orders API
-Route::get('/shopify/fetch-orders', [FetchShopifyOrdersController::class, 'fetch']);
+Route::post('/shopify/fetch-orders', [FetchShopifyOrdersController::class, 'fetch']);
 
 // Sync Orders API
 Route::get('/shopify/sync-orders', [SyncOrdersController::class, 'sync']);
