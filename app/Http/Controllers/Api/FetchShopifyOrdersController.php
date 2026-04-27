@@ -17,7 +17,7 @@ class FetchShopifyOrdersController extends Controller
 
         // get matching orders
         $orders = Order::whereIn('order_id', $request->order_ids)
-            ->post(['id', 'order_id']);
+            ->get(['id', 'order_id']);
 
         return response()->json([
             'status' => true,
