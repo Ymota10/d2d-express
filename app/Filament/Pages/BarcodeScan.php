@@ -77,6 +77,7 @@ class BarcodeScan extends Page
                 ->placeholder('Scan or paste multiple waybill numbers (one per line or separated by spaces)')
                 ->rows(6)
                 ->autosize()
+                ->autofocus()
                 ->required(),
         ];
     }

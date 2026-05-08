@@ -149,11 +149,18 @@
             <div class="logo">
                 <img src="{{ public_path('images/d2d_MAIN_LOGO-removebg-preview.png') }}" alt="D2D Express">
             </div>
-            <div class="barcode-block">
-                <div class="barcode">|| || ||| ||| || |</div>
-                <div class="number">{{ $order->waybill_number ?? '123456789' }}</div>
-            </div>
-        </div>
+
+            <div class="barcode-block" style="text-align: center;">
+    <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($order->waybill_number ?? '123456789') }}"
+        alt="QR Code"
+        style="width:120px; height:120px;"
+    >
+
+    <div class="number" style="margin-top: 5px;">
+        {{ $order->waybill_number ?? '123456789' }}
+    </div>
+</div>
 
         <div class="main-grid">
             <div class="left-col">
@@ -235,11 +242,6 @@
             <div>{{ __('Notes') }}: -</div>
             <div>{{ __('Order Ref') }}: {{ $order->reference ?? '-' }}</div>
             <div><strong>{{ __('Generated') }}:</strong> {{ now()->format('Y-m-d H:i') }}</div>
-        </div>
-
-        <div class="bottom-barcode">
-            <div class="barcode">|| || ||| ||| || |</div>
-            <div>{{ $order->waybill_number ?? '123456789' }}</div>
         </div>
     </div>
 @endforeach
