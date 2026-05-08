@@ -38,12 +38,6 @@
             padding-bottom: 6px;
         }
 
-        .logo img {
-            height: 100px;
-            width: auto;
-            object-fit: contain;
-        }
-
         .barcode-block {
             text-align: center;
         }
