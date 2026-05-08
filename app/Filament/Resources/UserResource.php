@@ -103,6 +103,10 @@ class UserResource extends Resource
                     'other' => 'Other',
                 ]),
 
+            Forms\Components\Toggle::make('warehousing')
+                ->label('Warehousing')
+                ->default(false),
+
             Forms\Components\TextInput::make('password')
                 ->label('Password')
                 ->password()
