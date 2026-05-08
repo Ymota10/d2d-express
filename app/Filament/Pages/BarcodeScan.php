@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Order;
 use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,20 +23,23 @@ class BarcodeScan extends Page
         return auth()->user()?->management !== 'track_express';
     }
 
-    public $waybills = '';      // raw input
+    public $waybills = '';
 
-    public $orders = [];        // fetched orders
+    public $orders = [];
 
-    public $duplicates = [];    // list of duplicates
+    public $duplicates = [];
 
-    /** Search for waybills in Orders table */
+    public $showStatusModal = false;
+
+    public $newStatus = null;
+
+    /** Search orders */
     public function search(): void
     {
         $codes = collect(preg_split('/[\s,]+/', trim($this->waybills)))
             ->filter()
             ->map(fn ($code) => strtoupper(trim($code)));
 
-        // Detect duplicates
         $this->duplicates = $codes->duplicates()->toArray();
 
         $user = Auth::user();
@@ -43,13 +47,11 @@ class BarcodeScan extends Page
         $query = Order::with(['user', 'area'])
             ->whereIn('waybill_number', $codes->unique());
 
-        // ✅ Only admins can see all, others only their orders
         if (method_exists($user, 'isAdmin')) {
             if (! $user->isAdmin()) {
                 $query->where('users_id', $user->id);
             }
         } else {
-            // fallback: allow only the user's own orders if no isAdmin() method
             $query->where('users_id', $user->id);
         }
 
@@ -60,13 +62,56 @@ class BarcodeScan extends Page
         })->toArray();
     }
 
-    /** Remove an order by ID */
+    /** Remove order */
     public function remove($id)
     {
         $this->orders = collect($this->orders)
             ->reject(fn ($order) => $order['id'] == $id)
             ->values()
             ->toArray();
+    }
+
+    /** Open modal */
+    public function openStatusModal()
+    {
+        $this->showStatusModal = true;
+    }
+
+    /** Update status */
+    public function updateStatus()
+    {
+        if (auth()->user()?->management !== 'admin') {
+            abort(403);
+        }
+
+        $ids = collect($this->orders)->pluck('id');
+
+        // ✅ WARNING if empty
+        if ($ids->isEmpty()) {
+            Notification::make()
+                ->title('No Orders Selected')
+                ->body('Please scan or select at least one order.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        Order::whereIn('id', $ids)->update([
+            'status' => $this->newStatus,
+        ]);
+
+        $this->showStatusModal = false;
+        $this->newStatus = null;
+
+        $this->search();
+
+        // ✅ SUCCESS MESSAGE (enhanced)
+        Notification::make()
+            ->title('Status Updated Successfully')
+            ->body(count($ids).' orders updated to '.str_replace('_', ' ', $this->newStatus))
+            ->success()
+            ->send();
     }
 
     protected function getFormSchema(): array
