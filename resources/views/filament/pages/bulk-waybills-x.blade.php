@@ -37,11 +37,12 @@
 
         /* Header (Logo + Barcode) */
         .header {
-            text-align: center;
-            border-bottom: 1px solid #000;
-            padding-bottom: 6px;
-            margin-bottom: 6px;
-        }
+    text-align: center;
+    border-bottom: 1px solid #000;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+}
+        
         .logo img {
             height: 60px;
         }
@@ -143,12 +144,17 @@
         <!-- HEADER -->
         <div class="header">
             <div class="logo">
-                <img src="{{ public_path('images/d2d_MAIN_LOGO-removebg-preview.png') }}" alt="D2D Express">
-            </div>
-            <div class="barcode">||| || ||| ||| || |||</div>
-            <div class="waybill-number">{{ $order->waybill_number }}</div>
-        </div>
+   <div class="barcode-block" style="text-align: center; margin-top: 5px;">
+    <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($order->waybill_number ?? '123456789') }}"
+        alt="QR Code"
+        style="width:70px; height:70px;"
+    >
 
+    <div style="font-size: 10px; margin-top: 2px;">
+        {{ $order->waybill_number ?? '123456789' }}
+    </div>
+</div>
         <!-- COD + DELIVERY -->
         <div class="summary">
             <div>{{ __('DELIVER') }}</div>
