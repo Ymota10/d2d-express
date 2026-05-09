@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>D2D Express Waybill</title>
-    <style>
 
-@page {
-    size: 80mm auto; /* X Printer (80mm) */
-    margin: 0;
-}
+    <style>
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
 
         @font-face {
             font-family: 'Amiri';
             src: url('{{ public_path("fonts/Amiri-Regular.ttf") }}') format('truetype');
-            font-weight: normal;
-            font-style: normal;
         }
 
         body {
@@ -28,49 +26,61 @@
         }
 
         .waybill {
-            width: 380px; /* Thermal printer width */
-            padding: 8px;
-            margin: 8px auto;
+            width: 380px;
+            margin: 5px auto;
             border: 1px solid #000;
+            padding: 6px;
             page-break-inside: avoid;
+            box-sizing: border-box;
         }
 
-        /* Header (Logo + Barcode) */
+        /* HEADER */
         .header {
-    text-align: center;
-    border-bottom: 1px solid #000;
-    padding-bottom: 4px;
-    margin-bottom: 4px;
-}
-        
-        .logo img {
-            height: 60px;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
         }
-        .barcode {
-            font-size: 18px;
-            letter-spacing: 3px;
-            margin-top: 5px;
-            font-weight: bold;
+
+        .qr-wrapper {
+            text-align: center;
+            margin-bottom: 2px;
         }
+
+        .qr-wrapper img {
+            width: 58px;
+            height: 58px;
+            display: block;
+            margin: 0 auto;
+        }
+
         .waybill-number {
             font-size: 12px;
             font-weight: bold;
             margin-top: 2px;
+            line-height: 1;
         }
 
-        /* COD + Delivery Type */
+        /* SUMMARY */
         .summary {
-            display: flex;
-            justify-content: space-between;
+            overflow: hidden;
             font-weight: bold;
             font-size: 11px;
             border: 1px solid #000;
             border-bottom: none;
-            padding: 5px 6px;
-            background: #f9f9f9;
+            padding: 4px 6px;
+            background: #f7f7f7;
         }
 
-        /* Info sections */
+        .summary-left {
+            float: left;
+        }
+
+        .summary-right {
+            float: right;
+        }
+
+        /* SECTION */
         .section {
             border: 1px solid #000;
             border-top: none;
@@ -88,119 +98,246 @@
         .info-table {
             width: 100%;
             border-collapse: collapse;
-            direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
         }
 
         .info-table td {
-            padding: 3px 5px;
-            font-size: 10px;
+            padding: 2px 5px;
+            font-size: 9px;
             vertical-align: top;
             border-bottom: 1px solid #ddd;
-            word-break: break-word;
+            line-height: 1.2;
         }
 
         .info-table td.label {
             font-weight: bold;
-            width: 40%;
-            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
+            width: 38%;
         }
 
         .info-table td.value {
-            text-align: {{ ($language ?? 'ar') == 'ar' ? 'right' : 'left' }};
-            font-family: 'Amiri', DejaVu Sans, sans-serif;
+            width: 62%;
+            word-break: break-word;
         }
 
-        /* Footer */
+        /* FOOTER */
         .footer {
             border-top: 1px solid #000;
-            margin-top: 6px;
+            margin-top: 4px;
             padding-top: 3px;
-            font-size: 9px;
+            font-size: 8px;
         }
 
         .footer-row {
-            display: flex;
-            justify-content: space-between;
-            direction: {{ ($language ?? 'ar') == 'ar' ? 'rtl' : 'ltr' }};
+            overflow: hidden;
         }
+
+        .footer-left {
+            float: left;
+        }
+
+        .footer-right {
+            float: right;
+        }
+
     </style>
 </head>
+
 <body>
+
 @php
     use ArPHP\I18N\Arabic;
     $arabic = new Arabic();
 @endphp
 
 @foreach ($orders as $order)
-    @php
-        $receiverName = $arabic->utf8Glyphs($order->receiver_name ?? '');
-        $receiverAddress = $arabic->utf8Glyphs($order->receiver_address ?? '');
-        $areaName = $arabic->utf8Glyphs($order->area->name ?? '');
-        $cityName = $arabic->utf8Glyphs($order->city->name ?? '');
-        $shipperName = $arabic->utf8Glyphs($order->user->name ?? '');
-    @endphp
 
-    <div class="waybill">
-        <!-- HEADER -->
-        <div class="header">
-            <div class="logo">
-   <div class="barcode-block" style="text-align: center; margin-top: 5px;">
-    <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($order->waybill_number ?? '123456789') }}"
-        alt="QR Code"
-        style="width:70px; height:70px;"
-    >
+@php
+    $receiverName = $arabic->utf8Glyphs($order->receiver_name ?? '');
+    $receiverAddress = $arabic->utf8Glyphs($order->receiver_address ?? '');
+    $areaName = $arabic->utf8Glyphs($order->area->name ?? '');
+    $cityName = $arabic->utf8Glyphs($order->city->name ?? '');
+    $shipperName = $arabic->utf8Glyphs($order->user->name ?? '');
+@endphp
 
-    <div style="font-size: 10px; margin-top: 2px;">
-        {{ $order->waybill_number ?? '123456789' }}
-    </div>
-</div>
-        <!-- COD + DELIVERY -->
-        <div class="summary">
-            <div>{{ __('DELIVER') }}</div>
-            <div>{{ __('COD') }}: {{ number_format($order->cod_amount, 2) }} {{ __('EGP') }}</div>
-        </div>
+<div class="waybill">
 
-        <!-- RECEIVER INFO -->
-        <div class="section">
-            <div class="section-title">{{ __('Receiver Information') }}</div>
-            <table class="info-table">
-                <tr><td class="label">{{ __('Shipper') }}</td><td class="value">{!! $shipperName !!}</td></tr>
-                <tr><td class="label">{{ __('Name') }}</td><td class="value">{!! $receiverName !!}</td></tr>
-                <tr><td class="label">{{ __('Mobile 1') }}</td><td class="value">{{ $order->receiver_mobile_1 }}</td></tr>
-                <tr><td class="label">{{ __('Mobile 2') }}</td><td class="value">{{ $order->receiver_mobile_2 ?? 'N/A' }}</td></tr>
-                <tr><td class="label">{{ __('Address') }}</td><td class="value">{!! $receiverAddress !!}</td></tr>
-                <tr><td class="label">{{ __('Area') }}</td><td class="value">{!! $areaName !!}</td></tr>
-                <tr><td class="label">{{ __('City') }}</td><td class="value">{!! $cityName !!}</td></tr>
-            </table>
-        </div>
+    <!-- HEADER -->
+    <div class="header">
 
-        <!-- SHIPMENT DETAILS -->
-        <div class="section">
-            <div class="section-title">{{ __('Shipment Details') }}</div>
-            <table class="info-table">
-                <tr><td class="label">{{ __('Item') }}</td><td class="value">{{ $order->item_name }}</td></tr>
-                <tr><td class="label">{{ __('Description') }}</td><td class="value">{{ $order->description ?? 'N/A' }}</td></tr>
-                <tr><td class="label">{{ __('Service') }}</td><td class="value">{{ ucfirst(str_replace('_', ' ', $order->service_type)) }}</td></tr>
-                <tr><td class="label">{{ __('Weight') }}</td><td class="value">{{ $order->weight }} kg</td></tr>
-                <tr><td class="label">{{ __('Size') }}</td><td class="value">{{ $order->size }}</td></tr>
-                <tr><td class="label">{{ __('Quantity') }}</td><td class="value">{{ $order->quantity }}</td></tr>
-                <tr><td class="label">{{ __('Status') }}</td><td class="value">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</td></tr>
-                <tr><td class="label">{{ __('Open Package') }}</td><td class="value">{{ ucfirst($order->open_package) }}</td></tr>
-                @if($order->status === 'undelivered')
-                    <tr><td class="label">{{ __('Reason') }}</td><td class="value">{{ ucfirst(str_replace('_', ' ', $order->undelivered_reason)) }}</td></tr>
-                @endif
-            </table>
-        </div>
+        <!-- QR ONLY -->
+        <div class="qr-wrapper">
+            <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($order->waybill_number ?? '123456789') }}"
+                alt="QR"
+            >
 
-        <!-- FOOTER -->
-        <div class="footer">
-            <div class="footer-row">
-                <div>{{ __('Order Ref') }}: {{ $order->reference ?? '-' }}</div>
-                <div><strong>{{ __('Generated') }}:</strong> {{ now()->format('Y-m-d H:i') }}</div>
+            <div class="waybill-number">
+                {{ $order->waybill_number ?? '123456789' }}
             </div>
         </div>
+
     </div>
+
+   <!-- SUMMARY -->
+<table style="
+    width:100%;
+    border:1px solid #000;
+    border-bottom:none;
+    border-collapse:collapse;
+    font-weight:bold;
+    font-size:11px;
+    background:#f7f7f7;
+">
+    <tr>
+        <td style="
+            padding:5px 6px;
+            text-align:left;
+            width:50%;
+        ">
+            {{ strtoupper($order->service_type ?? 'DELIVER') }}
+        </td>
+
+        <td style="
+            padding:5px 6px;
+            text-align:right;
+            width:50%;
+        ">
+            {{ __('COD') }}:
+            {{ number_format($order->cod_amount, 2) }}
+            {{ __('EGP') }}
+        </td>
+    </tr>
+</table>
+
+    <!-- RECEIVER INFO -->
+    <div class="section">
+
+        <div class="section-title">
+            {{ __('Receiver Information') }}
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <td class="label">{{ __('Shipper') }}</td>
+                <td class="value">{!! $shipperName !!}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Name') }}</td>
+                <td class="value">{!! $receiverName !!}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Mobile 1') }}</td>
+                <td class="value">{{ $order->receiver_mobile_1 }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Mobile 2') }}</td>
+                <td class="value">{{ $order->receiver_mobile_2 ?? 'N/A' }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Address') }}</td>
+                <td class="value">{!! $receiverAddress !!}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Area') }}</td>
+                <td class="value">{!! $areaName !!}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('City') }}</td>
+                <td class="value">{!! $cityName !!}</td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- SHIPMENT -->
+    <div class="section">
+
+        <div class="section-title">
+            {{ __('Shipment Details') }}
+        </div>
+
+        <table class="info-table">
+
+            <tr>
+                <td class="label">{{ __('Item') }}</td>
+                <td class="value">{{ $order->item_name }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Description') }}</td>
+                <td class="value">{{ $order->description ?? 'N/A' }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Service') }}</td>
+                <td class="value">{{ ucfirst(str_replace('_', ' ', $order->service_type)) }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Weight') }}</td>
+                <td class="value">{{ $order->weight }} kg</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Size') }}</td>
+                <td class="value">{{ $order->size }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Quantity') }}</td>
+                <td class="value">{{ $order->quantity }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Status') }}</td>
+                <td class="value">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</td>
+            </tr>
+
+            <tr>
+                <td class="label">{{ __('Open Package') }}</td>
+                <td class="value">{{ ucfirst($order->open_package) }}</td>
+            </tr>
+
+            @if($order->status === 'undelivered')
+            <tr>
+                <td class="label">{{ __('Reason') }}</td>
+                <td class="value">
+                    {{ ucfirst(str_replace('_', ' ', $order->undelivered_reason)) }}
+                </td>
+            </tr>
+            @endif
+
+        </table>
+
+    </div>
+
+<!-- FOOTER -->
+<div class="footer">
+
+    <table style="width:100%; font-size:8px;">
+        <tr>
+            <td style="text-align:left;">
+                {{ __('Order Ref') }}:
+                {{ $order->reference ?? '-' }}
+            </td>
+
+            <td style="text-align:right;">
+                <strong>{{ __('Generated') }}:</strong>
+                {{ now()->format('Y-m-d H:i') }}
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+</div>
+
 @endforeach
+
 </body>
 </html>
