@@ -43,23 +43,15 @@
         }
 
         .qr-wrapper {
-            text-align: center;
-            margin-bottom: 2px;
-        }
+    text-align: center;
+}
 
-        .qr-wrapper img {
-            width: 58px;
-            height: 58px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .waybill-number {
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 2px;
-            line-height: 1;
-        }
+.waybill-number {
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
 
         /* SUMMARY */
         .summary {
@@ -163,17 +155,18 @@
     <!-- HEADER -->
     <div class="header">
 
-        <!-- QR ONLY -->
-        <div class="qr-wrapper">
-            <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode($order->waybill_number ?? '123456789') }}"
-                alt="QR"
-            >
+      <!-- BARCODE -->
+<div class="qr-wrapper">
+    <img
+        src="https://barcode.tec-it.com/barcode.ashx?data={{ urlencode($order->waybill_number ?? '123456789') }}&code=Code128&dpi=96"
+        alt="Barcode"
+        style="height:60px; width:220px;"
+    >
 
-            <div class="waybill-number">
-                {{ $order->waybill_number ?? '123456789' }}
-            </div>
-        </div>
+    <div class="waybill-number">
+        {{ $order->waybill_number ?? '123456789' }}
+    </div>
+</div>
 
     </div>
 
