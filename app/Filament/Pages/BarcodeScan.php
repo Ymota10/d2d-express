@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Exports\ScannedOrdersExport;
 use App\Models\Order;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BarcodeScan extends Page
 {
@@ -134,5 +136,24 @@ class BarcodeScan extends Page
         return redirect()->route('filament.admin.pages.check-shipments', [
             'order_id' => implode(',', $ids),
         ]);
+    }
+
+    public function exportExcel()
+    {
+        if (empty($this->orders)) {
+
+            Notification::make()
+                ->title('No Orders Found')
+                ->body('Please scan orders first.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        return Excel::download(
+            new ScannedOrdersExport($this->orders),
+            'scanned-orders.xlsx'
+        );
     }
 }
