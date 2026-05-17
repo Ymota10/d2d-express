@@ -221,7 +221,7 @@ class OrderResource extends Resource
                             ->required()
                             ->reactive()
                             ->default('pickup_request')
-                            ->visible(fn () => auth()->user()?->management === 'admin'),
+                            ->visible(fn () => in_array(auth()->user()?->management, ['admin', 'track_express'])),
 
                         Forms\Components\Select::make('open_package')
                             ->label('Open Package')
