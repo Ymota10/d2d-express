@@ -18,9 +18,7 @@ class WarehouseInvoiceResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        $user = auth()->user();
-
-        return $user && ($user->warehousing || $user->management === 'admin');
+        return auth()->user()?->management === 'admin';
     }
 
     public static function table(Table $table): Table
