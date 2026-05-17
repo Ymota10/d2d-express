@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class WarehouseStockResource extends Resource
@@ -24,6 +25,22 @@ class WarehouseStockResource extends Resource
         $user = auth()->user();
 
         return $user && ($user->warehousing || $user->management === 'admin');
+    }
+
+    /**
+     * ✅ Non-admins only see their own stock
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+
+        if ($user?->management !== 'admin') {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query;
     }
 
     /**
@@ -102,6 +119,7 @@ class WarehouseStockResource extends Resource
                     ->label('Item')
                     ->searchable(),
 
+                // ✅ Admin only
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Assigned User')
                     ->visible(fn () => auth()->user()?->management === 'admin'),
