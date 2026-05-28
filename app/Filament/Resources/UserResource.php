@@ -103,6 +103,15 @@ class UserResource extends Resource
                     'other' => 'Other',
                 ]),
 
+            Forms\Components\Select::make('open_package')
+                ->label('Open Package')
+                ->options([
+                    'yes' => 'Yes',
+                    'no' => 'No',
+                ])
+                ->default('yes')
+                ->required(),
+
             Forms\Components\Toggle::make('warehousing')
                 ->label('Warehousing')
                 ->default(false),

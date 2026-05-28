@@ -25,6 +25,7 @@ class User extends Authenticatable
         'address',
         'profile_photo',
         'gender',
+        'open_package',
         'email_verified_at',
         'password',
         'image',

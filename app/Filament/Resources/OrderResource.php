@@ -54,7 +54,25 @@ class OrderResource extends Resource
                     ->required()
                     ->default(fn () => Auth::user()->management === 'shipper' ? auth()->id() : null)
                     ->disabled(fn () => Auth::user()->management !== 'admin')
-                    ->dehydrated(true),
+                    ->dehydrated(true)
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set) {
+
+                        $user = User::find($state);
+
+                        if (! $user) {
+                            return;
+                        }
+
+                        // ✅ Set open package based on selected shipper
+                        $set('open_package', $user->open_package ?? 'yes');
+
+                        // ✅ Set fee automatically
+                        $set(
+                            'open_package_fee',
+                            ($user->open_package ?? 'yes') === 'yes' ? 7 : 0
+                        );
+                    }),
 
                 // Area select
                 Forms\Components\Select::make('area_id')
@@ -225,16 +243,17 @@ class OrderResource extends Resource
 
                         Forms\Components\Select::make('open_package')
                             ->label('Open Package')
-                            ->options(['yes' => 'Yes', 'no' => 'No'])
-                            ->default('no')
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(fn ($state, callable $set) => $set('open_package_fee', $state === 'yes' ? 7 : 0)),
+                            ->options([
+                                'yes' => 'Yes',
+                                'no' => 'No',
+                            ])
+                            ->disabled()
+                            ->dehydrated(true)
+                            ->required(),
 
                         Forms\Components\TextInput::make('open_package_fee')
                             ->label('Open Package Fee')
                             ->numeric()
-                            ->default(0.00)
                             ->disabled()
                             ->dehydrated(true),
 
