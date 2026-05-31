@@ -247,6 +247,21 @@ class OrderResource extends Resource
                                 'yes' => 'Yes',
                                 'no' => 'No',
                             ])
+                            ->default(function (callable $get) {
+
+                                $userId = $get('users_id') ?: auth()->id();
+
+                                return User::find($userId)?->open_package ?? 'yes';
+                            })
+                            ->afterStateHydrated(function (callable $set, callable $get) {
+
+                                $userId = $get('users_id') ?: auth()->id();
+
+                                $openPackage = User::find($userId)?->open_package ?? 'yes';
+
+                                $set('open_package', $openPackage);
+                                $set('open_package_fee', $openPackage === 'yes' ? 7 : 0);
+                            })
                             ->disabled()
                             ->dehydrated(true)
                             ->required(),
@@ -254,8 +269,25 @@ class OrderResource extends Resource
                         Forms\Components\TextInput::make('open_package_fee')
                             ->label('Open Package Fee')
                             ->numeric()
+                            ->default(function (callable $get) {
+
+                                $userId = $get('users_id') ?: auth()->id();
+
+                                $openPackage = User::find($userId)?->open_package ?? 'yes';
+
+                                return $openPackage === 'yes' ? 7 : 0;
+                            })
+                            ->dehydrateStateUsing(function ($state, callable $get) {
+
+                                $userId = $get('users_id') ?: auth()->id();
+
+                                $openPackage = User::find($userId)?->open_package ?? 'yes';
+
+                                return $openPackage === 'yes' ? 7 : 0;
+                            })
                             ->disabled()
-                            ->dehydrated(true),
+                            ->dehydrated(true)
+                            ->required(),
 
                         Forms\Components\DatePicker::make('time_scheduled_at')
                             ->label('Scheduled Date')
