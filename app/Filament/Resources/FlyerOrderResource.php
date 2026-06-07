@@ -107,13 +107,13 @@ class FlyerOrderResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('quantity'),
-                Tables\Columns\TextColumn::make('total_price')->money('egp'),
                 Tables\Columns\TextColumn::make('customer_name'),
                 Tables\Columns\TextColumn::make('customer_phone'),
                 Tables\Columns\TextColumn::make('receiver_address')->limit(20),
                 Tables\Columns\TextColumn::make('area.name')->label('Area'),
+                Tables\Columns\TextColumn::make('quantity'),
                 Tables\Columns\TextColumn::make('delivery_cost')->money('egp'),
+                Tables\Columns\TextColumn::make('total_price')->money('egp'),
                 Tables\Columns\BadgeColumn::make('status')
                     ->getStateUsing(fn ($record) => match ($record->status) {
                         'pending' => 'Pending',
