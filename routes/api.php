@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\FetchShopifyOrdersController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ShopifyController;
 use App\Http\Controllers\Api\ShopifyWriteController;
+use App\Http\Controllers\Api\SyncOrdersController;
+use App\Http\Controllers\Api\TrackExpressWebhookController;
 use App\Http\Controllers\Api\UpdateShopifySettingsController;
 use App\Http\Controllers\Api\WooOrderWebhookController;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -37,7 +39,11 @@ Route::post('/shopify/update-settings', [UpdateShopifySettingsController::class,
 Route::post('/shopify/fetch-orders', [FetchShopifyOrdersController::class, 'fetch']);
 
 // Sync Orders API
-Route::get('/shopify/sync-orders', [SyncOrdersController::class, 'sync']);
+Route::post('/shopify/sync-orders', [SyncOrdersController::class, 'sync']);
+
+// Track Integration
+
+Route::post('/webhooks/trackexpress/status', [TrackExpressWebhookController::class, 'status']);
 
 // -----------------------------
 // WooCommerce Integration
