@@ -40,32 +40,43 @@ class SyncOrdersController extends Controller
 
                 /*
                 |------------------------------------------
-                | ITEMS
+                | ITEMS (FIXED FOR SHOPIFY STRUCTURE)
                 |------------------------------------------
                 */
                 $orderItems = collect($shopifyOrder['orderItems'] ?? []);
 
-                $items = $orderItems->pluck('name')->implode(', ');
+                // No product name anymore → fallback to variantId
+                $items = $orderItems->map(function ($item) {
+                    return $item['variantId'] ?? 'unknown-item';
+                })->implode(', ');
+
                 $quantity = $orderItems->sum('count');
-                $size = $orderItems->first()['size'] ?? null;
 
                 /*
                 |------------------------------------------
-                | CITY RESOLUTION
+                | SIZE (optional if you later add metafields)
+                |------------------------------------------
+                */
+                $size = null;
+
+                /*
+                |------------------------------------------
+                | PHONE FIX (IMPORTANT)
+                |------------------------------------------
+                */
+                $phone = $shopifyOrder['customerDetails']['phone']
+                    ?? $shopifyOrder['shippingDetails']['phone']
+                    ?? null;
+
+                /*
+                |------------------------------------------
+                | CITY + AREA (KEEP YOUR LOGIC)
                 |------------------------------------------
                 */
                 $provinceName = $shopifyOrder['shippingDetails']['province'] ?? null;
                 $addressText = $shopifyOrder['shippingDetails']['address1'] ?? '';
 
-                $city = City::all()->first(function ($c) use ($provinceName) {
-                    return levenshtein(strtolower($c->name), strtolower($provinceName)) <= 3;
-                });
-
-                /*
-                |------------------------------------------
-                | AREA (BEST MATCH USING LEVENSHTEIN)
-                |------------------------------------------
-                */
+                $city = City::where('name', $provinceName)->first();
 
                 $finalArea = null;
 
@@ -73,8 +84,7 @@ class SyncOrdersController extends Controller
 
                     $areas = Area::where('city_id', $city->id)->get();
 
-                    // 1. CLEAN + TOKENIZE ADDRESS
-                    $address = strtolower($shopifyOrder['shippingDetails']['address1'] ?? '');
+                    $address = strtolower($addressText);
                     $addressTokens = array_filter(
                         preg_split('/\s+/', preg_replace('/[^a-z0-9\s]/', ' ', $address))
                     );
@@ -85,27 +95,16 @@ class SyncOrdersController extends Controller
 
                         $areaName = strtolower($area->name);
 
-                        // 2. TOKENIZE AREA NAME
                         $areaTokens = array_filter(
                             preg_split('/\s+/', preg_replace('/[^a-z0-9\s]/', ' ', $areaName))
                         );
 
                         $score = 0;
 
-                        /*
-                        ---------------------------------------
-                        1. EXACT PHRASE MATCH (VERY STRONG)
-                        ---------------------------------------
-                        */
                         if (str_contains($address, $areaName)) {
                             $score += 100;
                         }
 
-                        /*
-                        ---------------------------------------
-                        2. TOKEN OVERLAP MATCHING (CORE LOGIC)
-                        ---------------------------------------
-                        */
                         foreach ($areaTokens as $token) {
                             if (strlen($token) < 3) {
                                 continue;
@@ -115,7 +114,6 @@ class SyncOrdersController extends Controller
                                 $score += 25;
                             }
 
-                            // partial match (important for typos)
                             foreach ($addressTokens as $addrToken) {
                                 if (levenshtein($token, $addrToken) <= 2) {
                                     $score += 15;
@@ -123,27 +121,16 @@ class SyncOrdersController extends Controller
                             }
                         }
 
-                        /*
-                        ---------------------------------------
-                        3. CITY BOOST
-                        ---------------------------------------
-                        */
                         if (str_contains($address, strtolower($city->name))) {
                             $score += 30;
                         }
 
-                        /*
-                        ---------------------------------------
-                        4. BEST PICK
-                        ---------------------------------------
-                        */
                         if ($score > $bestScore) {
                             $bestScore = $score;
                             $finalArea = $area;
                         }
                     }
 
-                    // fallback safety
                     if (! $finalArea) {
                         $finalArea = $areas->first();
                     }
@@ -172,9 +159,10 @@ class SyncOrdersController extends Controller
                     'receiver_name' => ($shopifyOrder['customerDetails']['firstName'] ?? '').' '.
                         ($shopifyOrder['customerDetails']['lastName'] ?? ''),
 
-                    'receiver_mobile_1' => $shopifyOrder['customerDetails']['phone'] ?? null,
-                    'receiver_mobile_2' => $shopifyOrder['shippingDetails']['phone'] ?? null,
-                    'receiver_address' => $shopifyOrder['shippingDetails']['address1'] ?? null,
+                    'receiver_mobile_1' => $phone,
+                    'receiver_mobile_2' => null,
+
+                    'receiver_address' => $addressText,
 
                     'cod_amount' => $shopifyOrder['totalPrice'] ?? 0,
 
@@ -187,35 +175,22 @@ class SyncOrdersController extends Controller
 
                     'notes' => json_encode($shopifyOrder['paymentGatewayNames'] ?? []),
 
-                    'service_type' => $this->mapOrderType(
-                        $shopifyOrder['orderType'] ?? 'delivery'
-                    ),
+                    'service_type' => $this->mapOrderType($shopifyOrder['orderType'] ?? 'delivery'),
 
                     'status' => 'pickup_request',
 
-                    /*
-                    |------------------------------------------
-                    | SHIPPING COST
-                    |------------------------------------------
-                    */
                     'city_id' => $city?->id ?? 1,
                     'area_id' => $finalArea?->id ?? 1,
                     'delivery_cost' => $finalArea?->delivery_cost ?? 85,
 
                     'source' => 'shopify',
-
                     'external_payload' => json_encode($shopifyOrder),
                 ]);
 
                 $createdOrders[] = [
                     'id' => $order->id,
                     'order_id' => $order->order_id,
-                    'users_id' => $order->users_id,
                     'delivery_cost' => $order->delivery_cost,
-                    'open_package' => $order->open_package,
-                    'open_package_fee' => $order->open_package_fee,
-                    'quantity' => $order->quantity,
-                    'size' => $order->size,
                 ];
             }
         });
@@ -223,7 +198,6 @@ class SyncOrdersController extends Controller
         return response()->json([
             'status' => true,
             'shop_id' => $request->shop_id,
-            'users_id' => $user->id,
             'created_orders' => $createdOrders,
         ]);
     }
