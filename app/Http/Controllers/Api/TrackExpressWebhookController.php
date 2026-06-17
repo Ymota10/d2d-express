@@ -12,11 +12,13 @@ class TrackExpressWebhookController extends Controller
 {
     public function status(Request $request)
     {
-        Log::info('TrackExpress Webhook', $request->all());
+        Log::info('TrackExpress Webhook Received', $request->all());
 
         $shipments = $request->input('response', []);
 
         if (empty($shipments)) {
+            Log::warning('TrackExpress Invalid Payload', $request->all());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid webhook payload',
@@ -28,16 +30,39 @@ class TrackExpressWebhookController extends Controller
 
         foreach ($shipments as $shipment) {
 
-            $waybill = $shipment['waybill'] ?? null;
+            Log::info('Processing Shipment', $shipment);
 
-            if (! $waybill) {
+            $trackWaybill = $shipment['waybill'] ?? null;
+            $d2dWaybill = $shipment['order_id'] ?? null;
+
+            Log::info('Lookup Data', [
+                'track_waybill' => $trackWaybill,
+                'd2d_waybill' => $d2dWaybill,
+            ]);
+
+            if (! $trackWaybill) {
+
+                Log::warning('Shipment skipped because waybill missing', $shipment);
+
                 continue;
             }
 
-            $order = Order::where('waybill_number', $waybill)->first();
+            $order = Order::where('waybill_number', $d2dWaybill)->first();
+
+            Log::info('Order Lookup Result', [
+                'searched_waybill_number' => $d2dWaybill,
+                'found' => (bool) $order,
+                'order_id' => $order?->id,
+            ]);
 
             if (! $order) {
-                $notFound[] = $waybill;
+
+                Log::warning('Order Not Found', [
+                    'track_waybill' => $trackWaybill,
+                    'd2d_waybill' => $d2dWaybill,
+                ]);
+
+                $notFound[] = $d2dWaybill;
 
                 continue;
             }
@@ -45,6 +70,11 @@ class TrackExpressWebhookController extends Controller
             $statusId = (int) ($shipment['status_id'] ?? 0);
 
             $mappedStatus = $this->mapStatus($statusId);
+
+            Log::info('Status Mapping', [
+                'status_id' => $statusId,
+                'mapped_status' => $mappedStatus,
+            ]);
 
             if ($mappedStatus) {
                 $order->status = $mappedStatus;
@@ -68,22 +98,46 @@ class TrackExpressWebhookController extends Controller
                     str_contains($reason, 'consignee') &&
                     str_contains($reason, 'escaped') => 'consignee_escaped',
 
-                    default => 'refused_shipment', // ✅ fallback
+                    default => 'refused_shipment',
                 };
 
                 $order->undelivered_reason = $mappedReason;
+
+                Log::info('Undelivered Reason Mapped', [
+                    'original_reason' => $reason,
+                    'mapped_reason' => $mappedReason,
+                ]);
             }
 
             if (
                 $statusId === 6 &&
                 ! empty($shipment['scheduled'])
             ) {
-                $order->time_scheduled_at = Carbon::parse($shipment['scheduled']);
+
+                $order->time_scheduled_at = Carbon::parse(
+                    $shipment['scheduled']
+                );
+
+                Log::info('Scheduled Date Saved', [
+                    'scheduled' => $shipment['scheduled'],
+                ]);
             }
 
             $order->save();
+
+            Log::info('Order Updated Successfully', [
+                'order_id' => $order->id,
+                'waybill_number' => $order->waybill_number,
+                'new_status' => $order->status,
+            ]);
+
             $updated++;
         }
+
+        Log::info('TrackExpress Processing Complete', [
+            'updated' => $updated,
+            'not_found' => $notFound,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -96,34 +150,15 @@ class TrackExpressWebhookController extends Controller
     {
         return match ($statusId) {
 
-            // Pickup Request
             1 => 'pickup_request',
-
-            // Warehouse Received
             3 => 'warehouse_received',
-
-            // Out For Delivery
             4 => 'out_for_delivery',
-
-            // Successful Delivery
             5 => 'success_delivery',
-
-            // Time Scheduled
             6 => 'time_scheduled',
-
-            // Returned to Warehouse
             7 => 'returned_to_warehouse',
-
-            // Undelivered
             13 => 'undelivered',
-
-            // Returned to Shipper
             14 => 'returned_to_shipper',
-
-            // Partial Delivery
             18 => 'partial_return',
-
-            // Returned and Cost Paid
             20 => 'returned_and_cost_paid',
 
             default => null,
