@@ -140,18 +140,16 @@ class OrderResource extends Resource
                 Forms\Components\Section::make('Receiver Info')->schema([
                     Forms\Components\TextInput::make('receiver_mobile_1')
                         ->label('Receiver Mobile 1')
-                        ->numeric()
+                        ->tel()
                         ->required()
-                        ->rule('regex:/^(010|011|012|015)[0-9]{8}$/')
-                        ->maxLength(11)
-                        ->validationAttribute('Receiver Mobile 1'),
+                        ->rule('regex:/^(\+20)?(10|11|12|15)[0-9]{8}$/')
+                        ->maxLength(14),
 
                     Forms\Components\TextInput::make('receiver_mobile_2')
                         ->label('Receiver Mobile 2')
-                        ->numeric()
-                        ->rule('regex:/^(010|011|012|015)[0-9]{8}$/')
-                        ->maxLength(11)
-                        ->validationAttribute('Receiver Mobile 2'),
+                        ->tel()
+                        ->rule('regex:/^(\+20)?(10|11|12|15)[0-9]{8}$/')
+                        ->maxLength(14),
 
                     Forms\Components\TextInput::make('receiver_name')
                         ->maxLength(255)
@@ -187,6 +185,7 @@ class OrderResource extends Resource
                             'replacement' => 'Replacement',
                             'refund' => 'Refund',
                         ])
+                        ->default('normal_cod')
                         ->required()
                         ->reactive()
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
