@@ -14,9 +14,14 @@ class TrackExpressWebhookController extends Controller
     {
         Log::info('TrackExpress Webhook Received', $request->all());
 
-        $shipments = $request->input('response', []);
+        $shipments = $request->input('response');
+
+        if (! $shipments) {
+            $shipments = [$request->all()];
+        }
 
         if (empty($shipments)) {
+
             Log::warning('TrackExpress Invalid Payload', $request->all());
 
             return response()->json([
