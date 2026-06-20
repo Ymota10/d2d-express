@@ -142,14 +142,14 @@ class OrderResource extends Resource
                         ->label('Receiver Mobile 1')
                         ->tel()
                         ->required()
-                        ->rule('regex:/^(\+20)?(10|11|12|15)[0-9]{8}$/')
-                        ->maxLength(14),
+                        ->rule('regex:/^(\+20|0)?(10|11|12|15)[0-9]{8}$/')
+                        ->maxLength(13),
 
                     Forms\Components\TextInput::make('receiver_mobile_2')
                         ->label('Receiver Mobile 2')
                         ->tel()
-                        ->rule('regex:/^(\+20)?(10|11|12|15)[0-9]{8}$/')
-                        ->maxLength(14),
+                        ->rule('regex:/^(\+20|0)?(10|11|12|15)[0-9]{8}$/')
+                        ->maxLength(13),
 
                     Forms\Components\TextInput::make('receiver_name')
                         ->maxLength(255)
