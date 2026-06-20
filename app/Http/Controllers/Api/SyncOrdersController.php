@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Area;
+use App\Models\AreaTier1;
+use App\Models\AreaTier2;
 use App\Models\City;
 use App\Models\Order;
 use App\Models\User;
@@ -69,12 +71,23 @@ class SyncOrdersController extends Controller
                     ?? null;
 
                 /*
-                |------------------------------------------
-                | CITY + AREA (KEEP YOUR LOGIC)
-                |------------------------------------------
-                */
+|------------------------------------------
+| CITY + AREA
+|------------------------------------------
+*/
                 $provinceName = $shopifyOrder['shippingDetails']['province'] ?? null;
-                $addressText = $shopifyOrder['shippingDetails']['address1'] ?? '';
+
+                $shipping = $shopifyOrder['shippingDetails'] ?? [];
+
+                $fullAddress = collect([
+                    $shipping['address1'] ?? null,
+                    $shipping['address2'] ?? null,
+                    $shipping['city'] ?? null,
+                    $shipping['province'] ?? null,
+                    $shipping['country'] ?? null,
+                ])
+                    ->filter()
+                    ->implode(' ');
 
                 $city = City::where('name', $provinceName)->first();
 
@@ -82,11 +95,33 @@ class SyncOrdersController extends Controller
 
                 if ($city) {
 
-                    $areas = Area::where('city_id', $city->id)->get();
+                    $branchId = $user->branch_id;
 
-                    $address = strtolower($addressText);
+                    /*
+                    |------------------------------------------
+                    | SELECT AREA TABLE BY SHIPPER BRANCH
+                    |------------------------------------------
+                    */
+                    if ($branchId == 2) {
+                        $areas = AreaTier1::where('city_id', $city->id)->get();
+                    } elseif ($branchId == 4) {
+                        $areas = AreaTier2::where('city_id', $city->id)->get();
+                    } else {
+                        $areas = Area::where('city_id', $city->id)->get();
+                    }
+
+                    /*
+                    |------------------------------------------
+                    | TOKENIZE ADDRESS
+                    |------------------------------------------
+                    */
+                    $address = strtolower($fullAddress);
+
                     $addressTokens = array_filter(
-                        preg_split('/\s+/', preg_replace('/[^a-z0-9\s]/', ' ', $address))
+                        preg_split(
+                            '/\s+/',
+                            preg_replace('/[^a-z0-9\s]/', ' ', $address)
+                        )
                     );
 
                     $bestScore = -1;
@@ -96,16 +131,30 @@ class SyncOrdersController extends Controller
                         $areaName = strtolower($area->name);
 
                         $areaTokens = array_filter(
-                            preg_split('/\s+/', preg_replace('/[^a-z0-9\s]/', ' ', $areaName))
+                            preg_split(
+                                '/\s+/',
+                                preg_replace('/[^a-z0-9\s]/', ' ', $areaName)
+                            )
                         );
 
                         $score = 0;
 
+                        /*
+                        |------------------------------------------
+                        | EXACT AREA NAME MATCH
+                        |------------------------------------------
+                        */
                         if (str_contains($address, $areaName)) {
                             $score += 100;
                         }
 
+                        /*
+                        |------------------------------------------
+                        | TOKEN MATCHES
+                        |------------------------------------------
+                        */
                         foreach ($areaTokens as $token) {
+
                             if (strlen($token) < 3) {
                                 continue;
                             }
@@ -115,16 +164,27 @@ class SyncOrdersController extends Controller
                             }
 
                             foreach ($addressTokens as $addrToken) {
+
                                 if (levenshtein($token, $addrToken) <= 2) {
                                     $score += 15;
                                 }
                             }
                         }
 
+                        /*
+                        |------------------------------------------
+                        | CITY BOOST
+                        |------------------------------------------
+                        */
                         if (str_contains($address, strtolower($city->name))) {
                             $score += 30;
                         }
 
+                        /*
+                        |------------------------------------------
+                        | BEST MATCH
+                        |------------------------------------------
+                        */
                         if ($score > $bestScore) {
                             $bestScore = $score;
                             $finalArea = $area;
@@ -135,7 +195,6 @@ class SyncOrdersController extends Controller
                         $finalArea = $areas->first();
                     }
                 }
-
                 /*
                 |------------------------------------------
                 | OPEN PACKAGE (FROM USER SETTINGS)
@@ -143,6 +202,19 @@ class SyncOrdersController extends Controller
                 */
                 $openPackage = $user->open_package ?? 'no';
                 $openPackageFee = $openPackage === 'yes' ? 7 : 0;
+
+                $shipping = $shopifyOrder['shippingDetails'] ?? [];
+
+                $fullAddress = collect([
+                    $shipping['address1'] ?? null,
+                    $shipping['address2'] ?? null,
+                    $shipping['city'] ?? null,
+                    $shipping['province'] ?? null,
+                    $shipping['country'] ?? null,
+                    $shipping['provinceCode'] ?? null,
+                ])
+                    ->filter()
+                    ->implode(', ');
 
                 /*
                 |------------------------------------------
@@ -162,7 +234,7 @@ class SyncOrdersController extends Controller
                     'receiver_mobile_1' => $phone,
                     'receiver_mobile_2' => null,
 
-                    'receiver_address' => $addressText,
+                    'receiver_address' => $fullAddress,
 
                     'cod_amount' => $shopifyOrder['totalPrice'] ?? 0,
 
