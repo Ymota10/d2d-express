@@ -30,7 +30,7 @@ class Cards extends BaseWidget
 
         // ✅ Combine time_scheduled + returned_to_warehouse
         $inProgress = (clone $orderQuery)
-            ->whereIn('status', ['time_scheduled', 'returned_to_warehouse'])
+            ->whereIn('status', ['time_scheduled', 'returned_to_warehouse', 'failed_attempt'])
             ->count();
 
         $successDelivery = (clone $orderQuery)

@@ -161,6 +161,7 @@ class TrackExpressWebhookController extends Controller
             5 => 'success_delivery',
             6 => 'time_scheduled',
             7 => 'returned_to_warehouse',
+            13 => 'failed_attempt',
             14 => 'returned_to_shipper',
             18 => 'partial_return',
             19 => 'undelivered',

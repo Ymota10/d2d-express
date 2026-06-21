@@ -240,6 +240,7 @@ class OrderResource extends Resource
                                 'partial_return' => 'Partial Delivery',
                                 'partial_return_2' => 'Partial Return',
                                 'time_scheduled' => 'Time Scheduled',
+                                'failed_attempt' => 'Failed Attempt',
                                 'undelivered' => 'Undelivered',
                                 'returned_and_cost_paid' => 'Returned and cost paid',
                                 'returned_to_warehouse' => 'Returned to Warehouse',
@@ -361,6 +362,7 @@ class OrderResource extends Resource
                             'partial_return' => 'Partial Delivery',
                             'partial_return_2' => 'Partial Return',
                             'time_scheduled' => 'Time Scheduled',
+                            'failed_attempt' => 'Failed Attempt',
                             'undelivered' => 'Undelivered',
                             'returned_and_cost_paid' => 'Returned and cost paid',
                             'returned_to_warehouse' => 'Returned to Warehouse',
@@ -377,6 +379,7 @@ class OrderResource extends Resource
                             'partial_return' => 'orange', // green
                             'partial_return_2' => 'partialreturn',
                             'time_scheduled' => 'secondary',    // purple (requires custom theme if not default)
+                            'failed_attempt' => 'danger',       // red
                             'undelivered' => 'danger',       // red
                             'returned_and_cost_paid' => 'seven',
                             'returned_to_warehouse' => 'fifth', //
@@ -477,6 +480,7 @@ class OrderResource extends Resource
                         'partial_return' => 'Partial Delivery',
                         'partial_return_2' => 'Partial Return',
                         'time_scheduled' => 'Time Scheduled',
+                        'failed_attempt' => 'Failed Attempt',
                         'undelivered' => 'Undelivered',
                         'returned_and_cost_paid' => 'Returned and cost paid',
                         'returned_to_warehouse' => 'Returned to Warehouse',
@@ -607,6 +611,7 @@ class OrderResource extends Resource
                                         'partial_return' => 'Partial Delivery',
                                         'partial_return_2' => 'Partial Return',
                                         'time_scheduled' => 'Time Scheduled',
+                                        'failed_attempt' => 'Failed Attempt',
                                         'undelivered' => 'Undelivered',
                                         'returned_and_cost_paid' => 'Returned and cost paid',
                                         'returned_to_warehouse' => 'Returned to Warehouse',
