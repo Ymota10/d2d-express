@@ -16,10 +16,12 @@ return new class extends Migration
                 'failed_attempt',
                 'success_delivery',
                 'time_scheduled',
-                'undelivered',
                 'partial_return',
+                'partial_return_2',
+                'undelivered',
                 'returned_to_warehouse',
-                'returned_to_shipper'
+                'returned_to_shipper',
+                'returned_and_cost_paid'
             ) NOT NULL DEFAULT 'pickup_request'
         ");
     }
@@ -34,10 +36,12 @@ return new class extends Migration
                 'out_for_delivery',
                 'success_delivery',
                 'time_scheduled',
-                'undelivered',
                 'partial_return',
+                'partial_return_2',
+                'undelivered',
                 'returned_to_warehouse',
-                'returned_to_shipper'
+                'returned_to_shipper',
+                'returned_and_cost_paid'
             ) NOT NULL DEFAULT 'pickup_request'
         ");
     }
