@@ -142,14 +142,24 @@ class OrderResource extends Resource
                         ->label('Receiver Mobile 1')
                         ->tel()
                         ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $set('receiver_mobile_1', preg_replace('/\s+/', '', $state));
+                        })
+                        ->dehydrateStateUsing(fn ($state) => preg_replace('/\s+/', '', $state))
                         ->rule('regex:/^(\+20|0)?(10|11|12|15)[0-9]{8}$/')
-                        ->maxLength(13),
+                        ->maxLength(20),
 
                     Forms\Components\TextInput::make('receiver_mobile_2')
                         ->label('Receiver Mobile 2')
                         ->tel()
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $set('receiver_mobile_2', preg_replace('/\s+/', '', $state));
+                        })
+                        ->dehydrateStateUsing(fn ($state) => preg_replace('/\s+/', '', $state))
                         ->rule('regex:/^(\+20|0)?(10|11|12|15)[0-9]{8}$/')
-                        ->maxLength(13),
+                        ->maxLength(20),
 
                     Forms\Components\TextInput::make('receiver_name')
                         ->maxLength(255)
