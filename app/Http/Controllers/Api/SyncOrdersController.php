@@ -47,19 +47,39 @@ class SyncOrdersController extends Controller
                 */
                 $orderItems = collect($shopifyOrder['orderItems'] ?? []);
 
-                // No product name anymore → fallback to variantId
-                $items = $orderItems->map(function ($item) {
-                    return $item['variantId'] ?? 'unknown-item';
-                })->implode(', ');
+                // Save real product titles
+
+                $items = $orderItems->pluck('name')->implode(', ');
+
+                // Total quantity
 
                 $quantity = $orderItems->sum('count');
 
-                /*
-                |------------------------------------------
-                | SIZE (optional if you later add metafields)
-                |------------------------------------------
-                */
-                $size = null;
+                // Extract size from Shopify title
+
+                $sizes = [];
+
+                foreach ($orderItems as $item) {
+
+                    $name = $item['name'] ?? '';
+
+                    // Example: "Filler Pack 2 - L / DD / Rubber"
+
+                    if (str_contains($name, ' - ')) {
+
+                        $parts = explode(' - ', $name, 2);
+
+                        if (! empty($parts[1])) {
+
+                            $sizes[] = trim(explode('/', $parts[1])[0]);
+
+                        }
+
+                    }
+
+                }
+
+                $size = ! empty($sizes) ? implode(', ', array_unique($sizes)) : null;
 
                 /*
                 |------------------------------------------
