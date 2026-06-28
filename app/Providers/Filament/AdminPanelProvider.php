@@ -6,6 +6,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
@@ -78,6 +79,15 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('150px')
             ->favicon('images/d2d MAIN LOGO.jpg')
             ->sidebarCollapsibleOnDesktop()
+
+            ->navigationGroups([
+                NavigationGroup::make()->label('Scanning'),
+                NavigationGroup::make()->label('Finance'),
+                NavigationGroup::make()->label('Warehousing'),
+                NavigationGroup::make()->label('Settings'),
+                NavigationGroup::make()->label('External'),
+            ])
+
             ->navigationItems([
                 NavigationItem::make('Our Website')
                     ->url('https://d2d-express-eg.com', shouldOpenInNewTab: true)

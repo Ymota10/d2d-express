@@ -70,6 +70,21 @@ class FinancialAnalysisResource extends Resource
                 Tables\Columns\TextColumn::make('weight')->label('Weight')->numeric()->sortable(),
                 Tables\Columns\TextColumn::make('cod_amount')->label('COD Amount')->money('EGP')->sortable(),
                 Tables\Columns\TextColumn::make('delivery_cost')->label('Delivery Cost')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('insurancePackage.name')
+                    ->label('Insurance')
+                    ->placeholder('No Insurance')
+                    ->badge()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('insurance_fee')
+                    ->label('Insurance Fee')
+                    ->money('EGP')
+                    ->sortable(),
+
+                // Tables\Columns\TextColumn::make('insured_amount')
+                //     ->label('Insured Amount')
+                //     ->money('EGP')
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service Type')
@@ -198,9 +213,9 @@ class FinancialAnalysisResource extends Resource
                                 ->sum('cod_amount');
 
                             $totalShipping = $records->sum('delivery_cost');
-
-                            $netValue = $totalCod - $totalShipping; // ✅ NEW
-
+                            $totalInsurance = $records->sum('insurance_fee');
+                            $openPackageFees = $records->sum('open_package_fee');
+                            $netValue = $totalCod - $totalShipping - $totalInsurance - $openPackageFees;
                             $count = $records->count();
 
                             // ✅ count per status
@@ -237,6 +252,14 @@ class FinancialAnalysisResource extends Resource
                                     ->label('Total Shipping Fees')
                                     ->content(number_format($totalShipping, 2).' EGP'),
 
+                                Forms\Components\Placeholder::make('total_open_package')
+                                    ->label('Total Open Package Fees')
+                                    ->content(number_format($openPackageFees, 2).' EGP'),
+
+                                Forms\Components\Placeholder::make('total_insurance')
+                                    ->label('Total Insurance Fees')
+                                    ->content(number_format($totalInsurance, 2).' EGP'),
+
                                 // ✅ NEW NET VALUE
                                 Forms\Components\Placeholder::make('net_value')
                                     ->label('Net Value')
@@ -265,6 +288,7 @@ class FinancialAnalysisResource extends Resource
                                 ->sum('cod_amount');
                             $totalShipping = $records->sum('delivery_cost');
                             $openPackageFees = $records->sum('open_package_fee'); // ✅ deduct open package fee
+                            $totalInsurance = $records->sum('insurance_fee');
                             $extra = 0;
 
                             if ($data['extra_type'] === 'fixed') {
@@ -274,19 +298,32 @@ class FinancialAnalysisResource extends Resource
                             }
 
                             // ✅ Deduct open package fees from net profit
-                            $finalAmount = $totalCod - $totalShipping - $extra - $openPackageFees;
-
+                            $finalAmount =
+                            $totalCod
+                            - $totalShipping
+                            - $openPackageFees
+                            - $totalInsurance
+                            - $extra;
                             // ✅ Get shipper ID (from the first order in the group)
                             $shipperId = $records->first()->shipper_id ?? null;
 
                             // ✅ Create Payment Report
                             $report = PaymentReport::create([
-                                'user_id' => auth()->id(), // who created the report
-                                'shipper_id' => $shipperId, // link report to shipper
+                                'user_id' => auth()->id(), // Admin who created the report
+                                'shipper_id' => $shipperId, // Shipper receiving the payment
+
                                 'order_ids' => json_encode($records->pluck('id')->toArray()),
+
                                 'total_cod' => $totalCod,
+
                                 'total_delivery_cost' => $totalShipping,
+
+                                'total_open_package_fees' => $openPackageFees,
+
+                                'total_insurance_fees' => $totalInsurance,
+
                                 'extra_fees' => $extra,
+
                                 'final_amount' => $finalAmount,
                             ]);
 

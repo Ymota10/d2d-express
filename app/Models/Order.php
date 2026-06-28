@@ -51,6 +51,11 @@ class Order extends Model
         'undelivered_reason',
         'time_scheduled_at',
 
+        // Insurance
+        'insurance_package_id',
+        'insurance_fee',
+        'insured_amount',
+
     ];
 
     public function isAdmin(): bool
@@ -111,6 +116,11 @@ class Order extends Model
     public function attempts()
     {
         return $this->hasMany(\App\Models\OrderAttempt::class);
+    }
+
+    public function insurancePackage()
+    {
+        return $this->belongsTo(\App\Models\InsurancePackage::class);
     }
 
     protected static function booted()

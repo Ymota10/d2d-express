@@ -112,6 +112,18 @@ class UserResource extends Resource
                 ->default('yes')
                 ->required(),
 
+            Forms\Components\Select::make('insurance_package_id')
+                ->label('Insurance Package')
+                ->relationship(
+                    name: 'insurancePackage',
+                    titleAttribute: 'name'
+                )
+                ->searchable()
+                ->preload()
+                ->nullable()
+                ->helperText('Leave empty if the shipper has not subscribed to an insurance package.')
+                ->visible(fn (Forms\Get $get) => $get('management') === 'shipper'),
+
             Forms\Components\Toggle::make('warehousing')
                 ->label('Warehousing')
                 ->default(false),
@@ -144,6 +156,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('national_id')->label('National ID'),
                 Tables\Columns\TextColumn::make('city.name')->label('City'),
                 Tables\Columns\TextColumn::make('branch.name')->label('Branch'),
+                Tables\Columns\TextColumn::make('insurancePackage.name')->label('Insurance')->badge()->placeholder('No Insurance'),
                 Tables\Columns\TextColumn::make('gender')->label('Gender'),
                 Tables\Columns\ImageColumn::make('profile_photo')
                     ->label('Profile Photo')

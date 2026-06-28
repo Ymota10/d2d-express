@@ -56,9 +56,45 @@ class OrderResource extends Resource
                     ->disabled(fn () => Auth::user()->management !== 'admin')
                     ->dehydrated(true)
                     ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set) {
+                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
 
                         $user = User::find($state);
+
+                        if (! $user) {
+                            return;
+                        }
+
+                        $package = $user->insurancePackage;
+
+                        if ($package) {
+                            $set('insurance_package_id', $package->id);
+                        } else {
+                            $set('insurance_package_id', null);
+                        }
+
+                        $cod = (float) $get('cod_amount');
+
+                        if ($package) {
+
+                            $fee = ($cod * $package->percentage) / 100;
+
+                            if ($fee < $package->minimum_fee) {
+                                $fee = $package->minimum_fee;
+                            }
+
+                            if ($package->percentage == 0) {
+                                $fee = 0;
+                            }
+
+                            $set('insurance_fee', round($fee, 2));
+                            $set('insured_amount', $cod);
+
+                        } else {
+
+                            $set('insurance_fee', 0);
+                            $set('insured_amount', 0);
+
+                        }
 
                         if (! $user) {
                             return;
@@ -187,7 +223,52 @@ class OrderResource extends Resource
                     Forms\Components\TextInput::make('cod_amount')
                         ->numeric()
                         ->placeholder('Including Shipping Fees')
-                        ->required(),
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set, callable $get) {
+
+                            $user = User::find($get('users_id'));
+
+                            if (! $user?->insurancePackage) {
+
+                                $set('insurance_fee', 0);
+                                $set('insured_amount', 0);
+
+                                return;
+                            }
+
+                            $package = $user->insurancePackage;
+
+                            $fee = ($state * $package->percentage) / 100;
+
+                            if ($fee < $package->minimum_fee) {
+                                $fee = $package->minimum_fee;
+                            }
+
+                            if ($package->percentage == 0) {
+                                $fee = 0;
+                            }
+
+                            $set('insurance_fee', round($fee, 2));
+
+                            $set('insured_amount', $state);
+                        }),
+
+                    Forms\Components\Hidden::make('insurance_package_id'),
+
+                    Forms\Components\TextInput::make('insurance_fee')
+                        ->label('Insurance Fee')
+                        ->numeric()
+                        ->disabled()
+                        ->dehydrated(true)
+                        ->prefix('EGP'),
+
+                    Forms\Components\TextInput::make('insured_amount')
+                        ->label('Insured Amount')
+                        ->numeric()
+                        ->disabled()
+                        ->dehydrated(true)
+                        ->prefix('EGP'),
 
                     Forms\Components\Select::make('service_type')
                         ->options([
@@ -431,6 +512,18 @@ class OrderResource extends Resource
                         'success' => 'yes',
                         'danger' => 'no',
                     ]),
+
+                Tables\Columns\TextColumn::make('insurancePackage.name')
+                    ->label('Insurance')
+                    ->badge()
+                    ->color('success')
+                    ->placeholder('No Insurance')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('insurance_fee')
+                    ->label('Insurance Fee')
+                    ->money('EGP')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('order_id')->sortable(),
                 Tables\Columns\TextColumn::make('delivery_cost')->numeric()->sortable(),

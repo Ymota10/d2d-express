@@ -40,6 +40,15 @@ class PaymentReportResource extends Resource
                 Tables\Columns\TextColumn::make('shipper.name')->label('Shipper'),
                 Tables\Columns\TextColumn::make('total_cod')->money('EGP'),
                 Tables\Columns\TextColumn::make('total_delivery_cost')->money('EGP'),
+                Tables\Columns\TextColumn::make('total_open_package_fees')
+                    ->label('Open Package Fees')
+                    ->money('EGP')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('total_insurance_fees')
+                    ->label('Insurance Fees')
+                    ->money('EGP')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('extra_fees')->money('EGP'),
                 Tables\Columns\TextColumn::make('final_amount')->money('EGP'),
                 Tables\Columns\TextColumn::make('created_at')->dateTime(),

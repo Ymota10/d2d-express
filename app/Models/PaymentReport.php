@@ -14,6 +14,8 @@ class PaymentReport extends Model
         'extra_fees',
         'shipper_id',
         'final_amount',
+        'total_open_package_fees',
+        'total_insurance_fees',
     ];
 
     protected $casts = [

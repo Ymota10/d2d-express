@@ -39,8 +39,14 @@ class FinancialSummary extends BaseWidget
             ->where('is_collected', 0)
             ->sum('open_package_fee');
 
+        // INSURANCE FEES
+        $insuranceTotal = (clone $ordersQuery)
+            ->whereIn('status', ['success_delivery', 'undelivered', 'partial_return'])
+            ->where('is_collected', 0)
+            ->sum('insurance_fee');
+
         // NET DESERVED = COLLECTED COD - D2D REVENUE - OPEN PACKAGE FEES
-        $netDeserved = $totalCodAmount - $d2dRevenue - $openPackageTotal;
+        $netDeserved = $totalCodAmount - $d2dRevenue - $openPackageTotal - $insuranceTotal;
 
         $stats = [
             Stat::make('DELIVERED', (clone $ordersQuery)
@@ -95,7 +101,7 @@ class FinancialSummary extends BaseWidget
                 ->chart([20, 23, 26, 30, 35, 39, 33])
                 ->icon('heroicon-o-currency-dollar'),
 
-            Stat::make('Delivery Fees', number_format($d2dRevenue, 2))
+            Stat::make('DELIVERY FEES', number_format($d2dRevenue, 2))
                 ->description('Total Delivery Cost')
                 ->color('primary')
                 ->chart([20, 23, 26, 30, 35, 39, 33])
@@ -106,6 +112,12 @@ class FinancialSummary extends BaseWidget
                 ->color('info')
                 ->chart([10, 12, 15, 18, 20, 22, 25])
                 ->icon('heroicon-o-gift'),
+
+            Stat::make('INSURANCE FEES', number_format($insuranceTotal, 2))
+                ->description('Insurance ')
+                ->color('warning')
+                ->chart([8, 10, 14, 16, 18, 20, 22])
+                ->icon('heroicon-o-shield-check'),
         ];
 
         // ✅ Add D2D Net Income (Admin only)
@@ -139,7 +151,11 @@ class FinancialSummary extends BaseWidget
                         $cost = $fee->delivery_cost;
                     }
 
-                    return $cost > 0 ? ($order->delivery_cost - $cost) : 0;
+                    $profit = $cost > 0
+                    ? ($order->delivery_cost - $cost)
+                    : 0;
+
+                    return $profit + $order->insurance_fee;
                 });
 
             $stats[] = Stat::make('D2D NET INCOME', number_format($d2dNetIncome, 2))

@@ -27,6 +27,7 @@ class User extends Authenticatable
         'gender',
         'open_package',
         'email_verified_at',
+        'insurance_package_id',
         'password',
         'image',
         'warehousing',
@@ -89,6 +90,11 @@ class User extends Authenticatable
     public function shipper()
     {
         return $this->hasOne(\App\Models\Shipper::class);
+    }
+
+    public function insurancePackage()
+    {
+        return $this->belongsTo(\App\Models\InsurancePackage::class);
     }
 
     /** ────────────────────────────────

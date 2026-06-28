@@ -1,38 +1,44 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->enum('status', [
+        DB::statement("
+            ALTER TABLE orders
+            MODIFY COLUMN status ENUM(
+                'pickup_request',
+                'warehouse_received',
+                'out_for_delivery',
+                'failed_attempt',
+                'success_delivery',
+                'time_scheduled',
+                'undelivered',
+                'partial_return',
+                'returned_to_warehouse',
+                'returned_to_shipper'
+            ) NOT NULL DEFAULT 'pickup_request'
+        ");
+    }
+
+    public function down(): void
+    {
+        DB::statement("
+            ALTER TABLE orders
+            MODIFY COLUMN status ENUM(
                 'pickup_request',
                 'warehouse_received',
                 'out_for_delivery',
                 'success_delivery',
                 'time_scheduled',
                 'undelivered',
+                'partial_return',
                 'returned_to_warehouse',
-                'returned_to_shipper',
-            ])->default('pickup_request')->after('service_type');
-
-            $table->enum('undelivered_reason', [
-                'refused_payment',
-                'no_answer',
-                'wrong_location',
-                'refused_shipment',
-            ])->nullable()->after('status');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['status', 'undelivered_reason']);
-        });
+                'returned_to_shipper'
+            ) NOT NULL DEFAULT 'pickup_request'
+        ");
     }
 };
