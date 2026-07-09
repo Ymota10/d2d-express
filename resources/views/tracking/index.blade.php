@@ -186,7 +186,8 @@
             <input
                 id="waybill"
                 type="text"
-                placeholder="e.g. DD12345678"
+                value="{{ request('waybill') }}"
+                placeholder="e.g. EG10394822"
                 autocomplete="off"
                 class="flex-1 px-4 py-3 border border-line rounded-sm font-mono text-base tracking-wide text-ink placeholder:text-slate/50 focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink"
                 onkeydown="if(event.key==='Enter') trackOrder()"
@@ -472,6 +473,11 @@ function formatDate(dateStr) {
     let d = new Date(dateStr);
     return d.toLocaleString();
 }
+
+// Auto-search when arriving with ?waybill=... in the URL
+@if (request('waybill'))
+    trackOrder();
+@endif
 </script>
 
 </body>

@@ -681,7 +681,7 @@ class OrderResource extends Resource
                     ->label('Order Tracking')
                     ->icon('heroicon-o-map-pin')
                     ->color('info')
-                    ->url(fn (Order $record): string => static::getUrl('track-order', ['record' => $record]))
+                    ->url(fn (Order $record): string => route('track.form', ['waybill' => $record->waybill_number]))
                     ->openUrlInNewTab(),
             ])
 
@@ -894,7 +894,6 @@ class OrderResource extends Resource
             'index' => Pages\ListOrders::route('/'),
             'create' => Pages\CreateOrder::route('/create'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
-            'track-order' => Pages\TrackOrder::route('/{record}/track'),
         ];
     }
 }
