@@ -277,7 +277,7 @@ class SyncOrdersController extends Controller
 
                     'receiver_address' => $fullAddress,
 
-                    'cod_amount' => $shopifyOrder['totalPrice'] ?? 0,
+                    'cod_amount' => $shopifyOrder['outstandingAmount'] ?? 0,
 
                     'item_name' => $items,
                     'quantity' => $quantity,
