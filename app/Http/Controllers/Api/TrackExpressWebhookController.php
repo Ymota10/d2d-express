@@ -181,7 +181,7 @@ class TrackExpressWebhookController extends Controller
                 'shop' => $user->shop_id,
 
                 'orders' => [[
-                    'shopifyOrderId' => $order->external_order_id,
+                    'shopifyOrderId' => $order->order_id,
                     'trackingNumber' => $order->waybill_number,
                     'trackingCompany' => 'D2DExpress',
                     'trackingUrl' => url('/track/'.$order->waybill_number),
