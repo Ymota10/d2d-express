@@ -136,6 +136,8 @@ class TrackExpressWebhookController extends Controller
                 $this->updateShopifyFulfillment($order);
             }
 
+            $this->updateShopifyStatuses($order);
+
             Log::info('Order Updated Successfully', [
                 'order_id' => $order->id,
                 'waybill_number' => $order->waybill_number,
@@ -193,6 +195,82 @@ class TrackExpressWebhookController extends Controller
         } catch (\Throwable $e) {
 
             Log::error('Shopify fulfillment failed', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function updateShopifyStatuses(Order $order): void
+    {
+        $user = User::find($order->users_id);
+
+        if (! $user || ! $user->shop_id) {
+            return;
+        }
+
+        $status = null;
+        $message = null;
+
+        switch ($order->status) {
+
+            case 'out_for_delivery':
+                $status = 'OUT_FOR_DELIVERY';
+                $message = 'Order is out for delivery by D2DExpress';
+                break;
+
+            case 'success_delivery':
+                $status = 'DELIVERED';
+                $message = 'Order delivered by D2DExpress';
+                break;
+
+            case 'undelivered':
+                $status = 'FAILURE';
+                $message = 'Delivery attempt failed';
+                break;
+
+            case 'time_scheduled':
+                $status = 'IN_TRANSIT';
+                $message = 'Order is in transit';
+                break;
+
+            case 'returned_to_warehouse':
+                $status = 'IN_TRANSIT';
+                $message = 'Order returned to warehouse and is still in transit';
+                break;
+
+            default:
+                return;
+        }
+
+        try {
+
+            $url = config('services.shopify_internal.url');
+            $key = config('services.shopify_internal.key');
+
+            $response = Http::withHeaders([
+                'x-internal-key' => $key,
+            ])->post($url.'/internal/shopify/update-fulfillment', [
+
+                'shop' => $user->shop_id,
+
+                'orders' => [[
+                    'shopifyOrderId' => $order->order_id,
+                    'status' => $status,
+                    'message' => $message,
+                ]],
+
+            ]);
+
+            Log::info('Shopify fulfillment status updated', [
+                'order_id' => $order->id,
+                'shopify_status' => $status,
+                'response' => $response->json(),
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Log::error('Shopify fulfillment status update failed', [
                 'order_id' => $order->id,
                 'message' => $e->getMessage(),
             ]);
