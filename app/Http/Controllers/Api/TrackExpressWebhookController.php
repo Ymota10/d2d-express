@@ -171,9 +171,12 @@ class TrackExpressWebhookController extends Controller
 
         try {
 
+            $url = config('services.shopify_internal.url');
+            $key = config('services.shopify_internal.key');
+
             Http::withHeaders([
-                'x-internal-key' => env('SHOPIFY_INTERNAL_API_KEY'),
-            ])->post(env('SHOPIFY_INTERNAL_API_URL').'/internal/shopify/fulfill-orders', [
+                'x-internal-key' => $key,
+            ])->post($url.'/internal/shopify/fulfill-orders', [
 
                 'shop' => $user->shop_id,
 
