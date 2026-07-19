@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class TrackExpressWebhookController extends Controller
@@ -130,6 +132,10 @@ class TrackExpressWebhookController extends Controller
 
             $order->save();
 
+            if ($order->status === 'warehouse_received') {
+                $this->updateShopifyFulfillment($order);
+            }
+
             Log::info('Order Updated Successfully', [
                 'order_id' => $order->id,
                 'waybill_number' => $order->waybill_number,
@@ -149,6 +155,45 @@ class TrackExpressWebhookController extends Controller
             'updated' => $updated,
             'not_found' => $notFound,
         ]);
+    }
+
+    private function updateShopifyFulfillment(Order $order): void
+    {
+        $user = User::find($order->users_id);
+
+        if (! $user || ! $user->shop_id) {
+            Log::warning('Cannot fulfill Shopify order. Shop not found.', [
+                'order_id' => $order->id,
+            ]);
+
+            return;
+        }
+
+        try {
+
+            Http::withHeaders([
+                'x-internal-key' => env('SHOPIFY_INTERNAL_API_KEY'),
+            ])->post(env('SHOPIFY_INTERNAL_API_URL').'/internal/shopify/fulfill-orders', [
+
+                'shop' => $user->shop_id,
+
+                'orders' => [[
+                    'shopifyOrderId' => $order->external_order_id,
+                    'trackingNumber' => $order->waybill_number,
+                    'trackingCompany' => 'D2DExpress',
+                    'trackingUrl' => url('/track/'.$order->waybill_number),
+                    'notifyCustomer' => true,
+                ]],
+
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Log::error('Shopify fulfillment failed', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function mapStatus($statusId)

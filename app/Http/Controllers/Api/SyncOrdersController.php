@@ -8,6 +8,7 @@ use App\Models\AreaTier1;
 use App\Models\AreaTier2;
 use App\Models\City;
 use App\Models\Order;
+use App\Models\ShopifySetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ class SyncOrdersController extends Controller
         $request->validate([
             'shop_id' => 'required|string',
             'orders' => 'required|array',
+            'auto' => 'required|boolean',
+
         ]);
 
         $user = User::where('shop_id', $request->shop_id)->first();
@@ -28,6 +31,24 @@ class SyncOrdersController extends Controller
                 'status' => false,
                 'message' => 'Shop not found',
             ], 404);
+        }
+
+        $shopifySettings = ShopifySetting::where('shop_id', $request->shop_id)->first();
+
+        if (! $shopifySettings) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Shopify settings not found',
+            ], 404);
+        }
+
+        if ((bool) $request->auto !== (bool) $shopifySettings->auto_sync) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Auto sync setting mismatch. Please refresh your Shopify settings before syncing.',
+                'expected_auto' => (bool) $shopifySettings->auto_sync,
+                'received_auto' => (bool) $request->auto,
+            ], 409);
         }
 
         $createdOrders = [];
