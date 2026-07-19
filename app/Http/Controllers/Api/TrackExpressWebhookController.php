@@ -224,7 +224,7 @@ class TrackExpressWebhookController extends Controller
                 $message = 'Order delivered by D2DExpress';
                 break;
 
-            case 'undelivered':
+            case 'failed_attempt':
                 $status = 'FAILURE';
                 $message = 'Delivery attempt failed';
                 break;
