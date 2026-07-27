@@ -12,11 +12,14 @@ use App\Models\ShopifySetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SyncOrdersController extends Controller
 {
     public function sync(Request $request)
     {
+
+        Log::info('Full Sync Payload', $request->all());
         $request->validate([
             'shop_id' => 'required|string',
             'orders' => 'required|array',
