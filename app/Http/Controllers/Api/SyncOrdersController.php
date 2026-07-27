@@ -45,14 +45,14 @@ class SyncOrdersController extends Controller
             ], 404);
         }
 
-        // if ((bool) $request->auto !== (bool) $shopifySettings->auto_sync) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Auto sync setting mismatch. Please refresh your Shopify settings before syncing.',
-        //         'expected_auto' => (bool) $shopifySettings->auto_sync,
-        //         'received_auto' => (bool) $request->auto,
-        //     ], 409);
-        // }
+        if ((bool) $request->auto !== (bool) $shopifySettings->auto_sync) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Auto sync setting mismatch. Please refresh your Shopify settings before syncing.',
+                'expected_auto' => (bool) $shopifySettings->auto_sync,
+                'received_auto' => (bool) $request->auto,
+            ], 409);
+        }
 
         $createdOrders = [];
 
