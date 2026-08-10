@@ -41,10 +41,11 @@ return [
         'consumer_secret' => env('WOOCOMMERCE_CONSUMER_SECRET'), // from .env
         'webhook_secret' => env('WOOCOMMERCE_WEBHOOK_SECRET'),   // from .env
     ],
-    'bosta' => [
-        'base_url' => env('BOSTA_BASE_URL', 'https://business.bosta.co/api/v2'),
-        'api_key' => env('BOSTA_API_KEY'),
-    ],
+
+    // 'bosta' => [
+    //     'base_url' => env('BOSTA_BASE_URL', 'https://business.bosta.co/api/v2'),
+    //     'api_key' => env('BOSTA_API_KEY'),
+    // ],
 
     'shopify_internal' => [
         'url' => env('SHOPIFY_INTERNAL_API_URL'),
