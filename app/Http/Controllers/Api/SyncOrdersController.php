@@ -337,13 +337,25 @@ class SyncOrdersController extends Controller
             | AUTHENTICATE WITH FLEXTOCK
             |------------------------------------------
             */
-            $authResponse = Http::post(
+            $authPayload = [
+                'username' => config('services.flextock.username'),
+                'password' => config('services.flextock.password'),
+                'key' => config('services.flextock.api_key'),
+            ];
+
+            Log::info('Flextock auth configuration check', [
+                'base_url' => config('services.flextock.base_url'),
+                'username' => $authPayload['username'],
+                'password_length' => strlen((string) $authPayload['password']),
+                'api_key_length' => strlen((string) $authPayload['key']),
+                'username_present' => ! empty($authPayload['username']),
+                'password_present' => ! empty($authPayload['password']),
+                'api_key_present' => ! empty($authPayload['key']),
+            ]);
+
+            $authResponse = Http::timeout(30)->post(
                 config('services.flextock.base_url').'/base/auth/',
-                [
-                    'username' => config('services.flextock.username'),
-                    'password' => config('services.flextock.password'),
-                    'key' => config('services.flextock.api_key'),
-                ]
+                $authPayload
             );
 
             if (! $authResponse->successful()) {
@@ -440,11 +452,16 @@ class SyncOrdersController extends Controller
             | Quantity = 1
             | Price    = 999
             */
+            $shopifyTotal = (float) ($shopifyOrder['totalPrice'] ?? 0);
+            $shippingFees = (float) ($order->delivery_cost ?? 0);
+
+            $lineItemPrice = max(0, $shopifyTotal - $shippingFees);
+
             $lineItems = [
                 [
                     'sku_code' => '1111',
                     'quantity' => 1,
-                    'sku_price' => 999,
+                    'sku_price' => $lineItemPrice,
                     'sku_promotional_price' => null,
                 ],
             ];
