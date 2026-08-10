@@ -12,6 +12,7 @@ use App\Models\ShopifySetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SyncOrdersController extends Controller
@@ -305,6 +306,13 @@ class SyncOrdersController extends Controller
                     'external_payload' => json_encode($shopifyOrder),
                 ]);
 
+                /*
+                |------------------------------------------
+                | CREATE ORDER IN FLEXTOCK
+                |------------------------------------------
+                */
+                $this->createFlextockOrder($order, $shopifyOrder);
+
                 $createdOrders[] = [
                     'id' => $order->id,
                     'order_id' => $order->order_id,
@@ -318,6 +326,243 @@ class SyncOrdersController extends Controller
             'shop_id' => $request->shop_id,
             'created_orders' => $createdOrders,
         ]);
+    }
+
+    private function createFlextockOrder(Order $order, array $shopifyOrder): void
+    {
+        try {
+
+            /*
+            |------------------------------------------
+            | AUTHENTICATE WITH FLEXTOCK
+            |------------------------------------------
+            */
+            $authResponse = Http::post(
+                config('services.flextock.base_url').'/base/auth/',
+                [
+                    'username' => config('services.flextock.username'),
+                    'password' => config('services.flextock.password'),
+                    'key' => config('services.flextock.api_key'),
+                ]
+            );
+
+            if (! $authResponse->successful()) {
+
+                Log::error('Flextock authentication failed', [
+                    'order_id' => $order->id,
+                    'status' => $authResponse->status(),
+                    'response' => $authResponse->json(),
+                ]);
+
+                return;
+            }
+
+            $accessToken = $authResponse->json('access');
+
+            if (! $accessToken) {
+
+                Log::error('Flextock authentication returned no access token', [
+                    'order_id' => $order->id,
+                    'response' => $authResponse->json(),
+                ]);
+
+                return;
+            }
+
+            /*
+            |------------------------------------------
+            | CUSTOMER DATA
+            |------------------------------------------
+            */
+            $customer = $shopifyOrder['customerDetails'] ?? [];
+            $shipping = $shopifyOrder['shippingDetails'] ?? [];
+
+            /*
+            |------------------------------------------
+            | SPLIT CUSTOMER NAME
+            |------------------------------------------
+            */
+            $firstName = $customer['firstName']
+                ?? $shipping['name']
+                ?? 'Customer';
+
+            $lastName = $customer['lastName'] ?? '';
+
+            /*
+            |------------------------------------------
+            | FLEXTOCK ORDER PAYMENTS
+            |------------------------------------------
+            |
+            | Fully paid Shopify order:
+            | payment_type = prepaid
+            | value = total price
+            |
+            | COD Shopify order:
+            | payment_type = cash_on_delivery
+            | value = COD amount
+            |
+            */
+            $isFullyPaid = (bool) ($shopifyOrder['fullyPaid'] ?? false);
+
+            $paymentData = [
+                [
+                    'value' => $isFullyPaid
+                        ? (float) ($shopifyOrder['totalPrice'] ?? 0)
+                        : (float) ($order->cod_amount ?? 0),
+
+                    'payment_type' => $isFullyPaid
+                        ? 'prepaid'
+                        : 'cash_on_delivery',
+
+                    'payment_method' => $isFullyPaid
+                        ? ($shopifyOrder['paymentGatewayNames'][0] ?? 'online')
+                        : null,
+
+                    'payment_reference' => $isFullyPaid
+                        ? ($shopifyOrder['id'] ?? null)
+                        : null,
+
+                    'payment_timestamp' => $isFullyPaid
+                        ? ($shopifyOrder['createdAt'] ?? now()->toIso8601String())
+                        : now()->toIso8601String(),
+                ],
+            ];
+
+            /*
+            |------------------------------------------
+            | LINE ITEM
+            |------------------------------------------
+            |
+            | One fixed Flextock product is used for
+            | every D2D order.
+            |
+            | SKU      = 1111
+            | Quantity = 1
+            | Price    = 999
+            */
+            $lineItems = [
+                [
+                    'sku_code' => '1111',
+                    'quantity' => 1,
+                    'sku_price' => 999,
+                    'sku_promotional_price' => null,
+                ],
+            ];
+
+            /*
+            |------------------------------------------
+            | FLEXTOCK PAYLOAD
+            |------------------------------------------
+            */
+            $payload = [
+                'order_code' => $order->waybill_number,
+
+                'order_date' => $order->created_at
+                    ? $order->created_at->format('Y-m-d')
+                    : now()->format('Y-m-d'),
+
+                'shipping_fees' => (float) ($order->delivery_cost ?? 0),
+
+                'is_free_shipping' => false,
+
+                'is_gift_order' => false,
+
+                'order_currency' => 'EGP',
+
+                'integration_source' => 'D2D Express',
+
+                'vendor_name' => 'D2D Express',
+
+                'customer_address' => [
+                    'country' => $shipping['country'] ?? 'Egypt',
+                    'city' => $shipping['province'] ?? $shipping['city'] ?? null,
+                    'area' => $shipping['city'] ?? null,
+
+                    'address_line1' => $shipping['address1']
+                        ?? $order->receiver_address
+                        ?? '',
+
+                    'address_line2' => $shipping['address2'] ?? null,
+
+                    'building_no' => null,
+                    'floor_no' => null,
+                    'apartment_no' => null,
+
+                    'is_work_address' => false,
+
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+
+                    'phone_number' => $order->receiver_mobile_1,
+                    'secondary_phone_number' => $order->receiver_mobile_2,
+
+                    'note' => $order->notes,
+                ],
+
+                'line_items' => $lineItems,
+
+                'extra_fees' => [],
+
+                'payment_data' => $paymentData,
+
+                'discounts_data' => [],
+
+                /*
+                |------------------------------------------
+                | FLEXTOCK DELIVERY
+                |------------------------------------------
+                |
+                | false = Flextock handles delivery.
+                |
+                | This is currently the default.
+                */
+                'requires_self_delivery' => false,
+            ];
+
+            /*
+            |------------------------------------------
+            | SEND ORDER TO FLEXTOCK
+            |------------------------------------------
+            */
+            $response = Http::withToken($accessToken)
+                ->acceptJson()
+                ->post(
+                    config('services.flextock.base_url').'/external-integration/create-order/',
+                    $payload
+                );
+
+            /*
+            |------------------------------------------
+            | LOG RESULT
+            |------------------------------------------
+            */
+            if ($response->successful()) {
+
+                Log::info('Flextock order created successfully', [
+                    'd2d_order_id' => $order->id,
+                    'waybill_number' => $order->waybill_number,
+                    'response' => $response->json(),
+                ]);
+
+            } else {
+
+                Log::error('Flextock order creation failed', [
+                    'd2d_order_id' => $order->id,
+                    'waybill_number' => $order->waybill_number,
+                    'status' => $response->status(),
+                    'response' => $response->json(),
+                    'payload' => $payload,
+                ]);
+            }
+
+        } catch (\Throwable $e) {
+
+            Log::error('Flextock order integration exception', [
+                'd2d_order_id' => $order->id,
+                'waybill_number' => $order->waybill_number,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function mapOrderType($type)

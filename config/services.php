@@ -51,4 +51,11 @@ return [
         'key' => env('SHOPIFY_INTERNAL_API_KEY'),
     ],
 
+    'flextock' => [
+        'username' => env('FLEXTOCK_USERNAME'),
+        'password' => env('FLEXTOCK_PASSWORD'),
+        'api_key' => env('FLEXTOCK_API_KEY'),
+        'base_url' => env('FLEXTOCK_BASE_URL', 'https://api.flextock.com'),
+    ],
+
 ];
