@@ -56,6 +56,11 @@ class Order extends Model
         'insurance_fee',
         'insured_amount',
 
+        // externals
+        'source',
+        'external_order_id',
+        'external_payload',
+
     ];
 
     public function isAdmin(): bool
