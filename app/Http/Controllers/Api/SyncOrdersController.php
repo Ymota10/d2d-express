@@ -261,6 +261,16 @@ class SyncOrdersController extends Controller
                     ->filter()
                     ->implode(', ');
 
+                // Check for duplicates before order creation
+
+                $existingOrder = Order::where('external_order_id', $shopifyOrder['id'])
+                    ->where('users_id', $user->id)
+                    ->first();
+
+                if ($existingOrder) {
+                    continue;
+                }
+
                 /*
                 |------------------------------------------
                 | CREATE ORDER
