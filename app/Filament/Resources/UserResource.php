@@ -128,6 +128,14 @@ class UserResource extends Resource
                 ->label('Warehousing')
                 ->default(false),
 
+            Forms\Components\TextInput::make('waybill_prefix')
+                ->label('Waybill Prefix')
+                ->maxLength(10)
+                ->required()
+                ->unique(ignoreRecord: true)
+                ->visible(fn () => auth()->user()?->isAdmin())
+                ->helperText('Example: TG, ABC, MS'),
+
             Forms\Components\TextInput::make('password')
                 ->label('Password')
                 ->password()

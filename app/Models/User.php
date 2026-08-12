@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -31,6 +32,7 @@ class User extends Authenticatable
         'password',
         'image',
         'warehousing',
+        'waybill_prefix',
     ];
 
     protected $hidden = [
@@ -90,6 +92,11 @@ class User extends Authenticatable
     public function shipper()
     {
         return $this->hasOne(\App\Models\Shipper::class);
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'users_id');
     }
 
     public function insurancePackage()

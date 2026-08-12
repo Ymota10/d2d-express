@@ -131,13 +131,37 @@ class Order extends Model
     protected static function booted()
     {
         static::creating(function ($order) {
+
             // Mirror users_id to shipper_id
             if (empty($order->shipper_id) && $order->users_id) {
                 $order->shipper_id = $order->users_id;
             }
 
-            // Generate unique waybill
-            $order->waybill_number = 'DD'.str_pad(mt_rand(1, 999999), 6, '0', STR_PAD_LEFT);
+            $shipper = User::find($order->users_id);
+
+            if (! $shipper?->waybill_prefix) {
+                throw new \RuntimeException(
+                    'Waybill prefix is not configured for this shipper.'
+                );
+            }
+
+            $prefix = strtoupper(trim($shipper->waybill_prefix));
+
+            do {
+                $number = str_pad(
+                    random_int(1, 999999),
+                    6,
+                    '0',
+                    STR_PAD_LEFT
+                );
+
+                $waybill = $prefix.'-'.$number;
+
+            } while (
+                static::where('waybill_number', $waybill)->exists()
+            );
+
+            $order->waybill_number = $waybill;
         });
     }
 }
