@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FetchShopifyOrdersController;
+use App\Http\Controllers\Api\FlextockWebhookController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ShopifyController;
 use App\Http\Controllers\Api\ShopifyWriteController;
@@ -44,6 +45,7 @@ Route::post('/shopify/sync-orders', [SyncOrdersController::class, 'sync']);
 // Track Integration
 
 Route::post('/webhooks/trackexpress/status', [TrackExpressWebhookController::class, 'status']);
+Route::post('/webhooks/flextock/status', [FlextockWebhookController::class, 'status']);
 
 // -----------------------------
 // WooCommerce Integration
