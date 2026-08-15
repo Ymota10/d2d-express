@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class FlextockWebhookController extends Controller
@@ -21,7 +23,7 @@ class FlextockWebhookController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDATION
+        | VALIDATE PAYLOAD
         |--------------------------------------------------------------------------
         */
 
@@ -44,11 +46,9 @@ class FlextockWebhookController extends Controller
         | FIND OUR ORDER
         |--------------------------------------------------------------------------
         |
-        | When creating the Flextock order, we send:
+        | When creating the Flextock order we send:
         |
         | order_code => $order->waybill_number
-        |
-        | Therefore we find our order using waybill_number.
         |
         */
 
@@ -91,23 +91,18 @@ class FlextockWebhookController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | NO MAPPING
+        | DAMAGED / UNKNOWN / UNMAPPED STATUS
         |--------------------------------------------------------------------------
         |
-        | IMPORTANT:
+        | "damaged" intentionally has no D2D status mapping.
         |
-        | If Flextock sends a status that we intentionally do not map,
-        | such as:
-        |
-        | in transit + damaged
-        |
-        | we DO NOT change our order status.
+        | We don't change the order status in this case.
         |
         */
 
         if (! $mappedStatus) {
 
-            Log::info('Flextock Status Ignored - No Mapping', [
+            Log::warning('Flextock Status Has No Mapping - Order Not Changed', [
                 'order_id' => $order->id,
                 'order_code' => $orderCode,
                 'flextock_status' => $flextockStatus,
@@ -117,19 +112,19 @@ class FlextockWebhookController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Flextock status received but no mapping was configured. Order status was not changed.',
+                'message' => 'Flextock status received but no D2D status mapping exists. Order was not changed.',
                 'order_id' => $order->id,
                 'order_code' => $orderCode,
                 'flextock_status' => $flextockStatus,
                 'sub_status' => $subStatus,
-                'current_status' => $order->status,
                 'mapped_status' => null,
+                'current_status' => $order->status,
             ]);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | UPDATE ORDER
+        | UPDATE ORDER STATUS
         |--------------------------------------------------------------------------
         */
 
@@ -139,26 +134,50 @@ class FlextockWebhookController extends Controller
 
         $order->save();
 
-        /*
-        |--------------------------------------------------------------------------
-        | LOG SUCCESS
-        |--------------------------------------------------------------------------
-        */
-
         Log::info('Flextock Order Status Updated Successfully', [
             'order_id' => $order->id,
             'order_code' => $orderCode,
             'old_status' => $oldStatus,
             'new_status' => $order->status,
-            'flextock_status' => $flextockStatus,
-            'sub_status' => $subStatus,
         ]);
 
         /*
         |--------------------------------------------------------------------------
-        | RESPONSE
+        | SHOPIFY FULFILLMENT
         |--------------------------------------------------------------------------
+        |
+        | Same behavior as TrackExpress:
+        |
+        | warehouse_received
+        | -> create Shopify fulfillment
+        | -> send tracking number
+        | -> send tracking URL
+        |
         */
+
+        if ($order->status === 'warehouse_received') {
+            $this->updateShopifyFulfillment($order);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SHOPIFY STATUS
+        |--------------------------------------------------------------------------
+        |
+        | Send the mapped D2D status to Shopify where applicable.
+        |
+        */
+
+        $this->updateShopifyStatuses($order);
+
+        Log::info('Flextock Processing Complete', [
+            'order_id' => $order->id,
+            'order_code' => $orderCode,
+            'flextock_status' => $flextockStatus,
+            'sub_status' => $subStatus,
+            'old_status' => $oldStatus,
+            'new_status' => $order->status,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -167,18 +186,23 @@ class FlextockWebhookController extends Controller
             'order_code' => $orderCode,
             'flextock_status' => $flextockStatus,
             'sub_status' => $subStatus,
-            'old_status' => $oldStatus,
             'mapped_status' => $mappedStatus,
+            'old_status' => $oldStatus,
             'new_status' => $order->status,
         ]);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | FLEXTOCK → D2D STATUS MAPPING
+    | FLEXTOCK -> D2D STATUS MAPPING
     |--------------------------------------------------------------------------
     |
-    | This mapping follows the agreed mapping table exactly.
+    | Flextock gives us:
+    |
+    | order_status
+    | sub_status
+    |
+    | We convert those strings into our database statuses.
     |
     */
 
@@ -189,7 +213,7 @@ class FlextockWebhookController extends Controller
 
         $status = strtolower(trim($status));
 
-        $subStatus = $subStatus !== null
+        $subStatus = $subStatus
             ? strtolower(trim($subStatus))
             : null;
 
@@ -199,10 +223,6 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | PENDING
             |--------------------------------------------------------------------------
-            |
-            | pending + null
-            | pending + confirmed
-            |
             */
 
             'pending' => 'pickup_request',
@@ -211,12 +231,6 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | ON HOLD
             |--------------------------------------------------------------------------
-            |
-            | Most on-hold statuses remain pickup_request.
-            |
-            | EXCEPTION:
-            | on hold + no answer => failed_attempt
-            |
             */
 
             'on hold' => match ($subStatus) {
@@ -238,13 +252,6 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | READY
             |--------------------------------------------------------------------------
-            |
-            | ready + null
-            |       => warehouse_received
-            |
-            | ready + rescheduled
-            |       => time_scheduled
-            |
             */
 
             'ready' => match ($subStatus) {
@@ -258,28 +265,13 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | PROCESSING
             |--------------------------------------------------------------------------
-            |
-            | processing + null
-            |       => warehouse_received
-            |
-            | processing + cancellation in progress
-            |       => warehouse_received
-            |
-            | processing + cancellation rejected
-            |       => time_scheduled
-            |
-            | processing + rescheduled
-            |       => time_scheduled
-            |
             */
 
             'processing' => match ($subStatus) {
 
-                'cancellation rejected' => 'time_scheduled',
-
                 'rescheduled' => 'time_scheduled',
 
-                'cancellation in progress' => 'warehouse_received',
+                'cancellation rejected' => 'time_scheduled',
 
                 default => 'warehouse_received',
             },
@@ -296,13 +288,6 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | IN TRANSIT
             |--------------------------------------------------------------------------
-            |
-            | pending out for delivery => out_for_delivery
-            | out for delivery         => out_for_delivery
-            | failed attempt           => failed_attempt
-            | lost                     => lost
-            | damaged                  => NO MAPPING
-            |
             */
 
             'in transit' => match ($subStatus) {
@@ -316,11 +301,10 @@ class FlextockWebhookController extends Controller
                 'lost' => 'lost',
 
                 /*
-                | IMPORTANT:
-                | damaged intentionally has NO mapping.
-                | Returning null here means our existing order status
-                | will remain unchanged.
-                */
+                 * Damaged intentionally has NO mapping.
+                 * Returning null means the order status
+                 * will remain unchanged.
+                 */
                 'damaged' => null,
 
                 default => null,
@@ -340,15 +324,12 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            'pick up' => 'out_for_delivery',
+            'pick up' => 'pickup_request',
 
             /*
             |--------------------------------------------------------------------------
             | RETURNING
             |--------------------------------------------------------------------------
-            |
-            | returning + rto => returned_to_warehouse
-            |
             */
 
             'returning' => match ($subStatus) {
@@ -362,11 +343,6 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | RETURNED TO ORIGIN
             |--------------------------------------------------------------------------
-            |
-            | received          => returned_to_shipper
-            | stocked           => returned_to_shipper
-            | ready for return  => returned_to_warehouse
-            |
             */
 
             'returned to origin' => match ($subStatus) {
@@ -384,12 +360,6 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             | LOST
             |--------------------------------------------------------------------------
-            |
-            | lost + by courier
-            | lost + by flextock
-            |
-            | Both map to our "lost" status.
-            |
             */
 
             'lost' => match ($subStatus) {
@@ -409,5 +379,184 @@ class FlextockWebhookController extends Controller
 
             default => null,
         };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOPIFY FULFILLMENT
+    |--------------------------------------------------------------------------
+    |
+    | Creates the fulfillment in Shopify and sends:
+    |
+    | - Shopify order ID
+    | - D2D waybill
+    | - D2D Express as tracking company
+    | - D2D tracking URL
+    |
+    */
+
+    private function updateShopifyFulfillment(Order $order): void
+    {
+        $user = User::find($order->users_id);
+
+        if (! $user || ! $user->shop_id) {
+
+            Log::warning('Cannot fulfill Shopify order. Shop not found.', [
+                'order_id' => $order->id,
+            ]);
+
+            return;
+        }
+
+        try {
+
+            $url = config('services.shopify_internal.url');
+            $key = config('services.shopify_internal.key');
+
+            $response = Http::withHeaders([
+                'x-internal-key' => $key,
+            ])->post(
+                $url.'/internal/shopify/fulfill-orders',
+                [
+                    'shop' => $user->shop_id,
+
+                    'orders' => [[
+                        'shopifyOrderId' => $order->order_id,
+
+                        'trackingNumber' => $order->waybill_number,
+
+                        'trackingCompany' => 'D2D Express',
+
+                        'trackingUrl' => 'https://www.d2d-dashboard.com/admin/track?waybill='
+                            .$order->waybill_number,
+
+                        'notifyCustomer' => true,
+                    ]],
+                ]
+            );
+
+            Log::info('Shopify fulfillment created from Flextock webhook', [
+                'order_id' => $order->id,
+                'shop_id' => $user->shop_id,
+                'tracking_number' => $order->waybill_number,
+                'response' => $response->json(),
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Log::error('Shopify fulfillment failed from Flextock webhook', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOPIFY STATUS UPDATE
+    |--------------------------------------------------------------------------
+    |
+    | Same mapping currently used by TrackExpressWebhookController.
+    |
+    */
+
+    private function updateShopifyStatuses(Order $order): void
+    {
+        $user = User::find($order->users_id);
+
+        if (! $user || ! $user->shop_id) {
+            return;
+        }
+
+        $status = null;
+        $message = null;
+
+        switch ($order->status) {
+
+            case 'out_for_delivery':
+
+                $status = 'OUT_FOR_DELIVERY';
+
+                $message = 'Order is out for delivery by D2DExpress';
+
+                break;
+
+            case 'success_delivery':
+
+                $status = 'DELIVERED';
+
+                $message = 'Order delivered by D2DExpress';
+
+                break;
+
+            case 'failed_attempt':
+
+                $status = 'FAILURE';
+
+                $message = 'Delivery attempt failed';
+
+                break;
+
+            case 'time_scheduled':
+
+                $status = 'IN_TRANSIT';
+
+                $message = 'Order is in transit';
+
+                break;
+
+            case 'returned_to_warehouse':
+
+                $status = 'IN_TRANSIT';
+
+                $message =
+                    'Order returned to warehouse and is still in transit';
+
+                break;
+
+            default:
+
+                return;
+        }
+
+        try {
+
+            $url = config('services.shopify_internal.url');
+            $key = config('services.shopify_internal.key');
+
+            $response = Http::withHeaders([
+                'x-internal-key' => $key,
+            ])->post(
+                $url.'/internal/shopify/update-fulfillment',
+                [
+                    'shop' => $user->shop_id,
+
+                    'orders' => [[
+                        'shopifyOrderId' => $order->order_id,
+
+                        'status' => $status,
+
+                        'message' => $message,
+                    ]],
+                ]
+            );
+
+            Log::info('Shopify fulfillment status updated from Flextock', [
+                'order_id' => $order->id,
+                'shopify_status' => $status,
+                'message' => $message,
+                'response' => $response->json(),
+            ]);
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'Shopify fulfillment status update failed from Flextock',
+                [
+                    'order_id' => $order->id,
+                    'message' => $e->getMessage(),
+                ]
+            );
+        }
     }
 }
