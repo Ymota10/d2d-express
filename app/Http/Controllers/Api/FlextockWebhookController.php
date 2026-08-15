@@ -425,7 +425,7 @@ class FlextockWebhookController extends Controller
 
                         'trackingNumber' => $order->waybill_number,
 
-                        'trackingCompany' => 'D2D Express',
+                        'trackingCompany' => 'LYNK',
 
                         'trackingUrl' => 'https://www.d2d-dashboard.com/admin/track?waybill='
                             .$order->waybill_number,
