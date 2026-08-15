@@ -15,10 +15,10 @@
             theme: {
                 extend: {
                     colors: {
-                        ink: '#0169CC',
-                        ink2: '#01549D',
+                        ink: '#2563EB',
+                        ink2: '#1D4ED8',
                         paper: '#FAFBFD',
-                        amber: '#FFDF00',
+                        amber: '#0D1B3D',
                         route: '#2E9E6D',
                         alert: '#D6483F',
                         slate: '#5C7089',
@@ -72,7 +72,7 @@
             display: flex;
             align-items: stretch;
             height: 26px;
-            color: #0169CC;
+            color: #2563EB;
             opacity: 0.85;
         }
         .barcode-strip span {
@@ -136,7 +136,7 @@
             left: 0; top: 4px;
             width: 9px; height: 9px;
             border-radius: 50%;
-            background: #0169CC;
+            background: #2563EB;
         }
         .tl-line {
             border-left: 2px dotted #DCE6F2;
@@ -162,7 +162,7 @@
     {{-- MARK --}}
     <div class="flex items-center gap-2 mb-10">
         <div class="w-8 h-8 rounded-sm bg-ink flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFDF00" stroke-width="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D1B3D" stroke-width="2">
                 <path d="M3 7l9-4 9 4-9 4-9-4z"/>
                 <path d="M3 7v10l9 4 9-4V7"/>
                 <path d="M12 11v10"/>
@@ -173,7 +173,7 @@
 
     {{-- HERO / SEARCH --}}
     <div class="mb-4">
-        <p class="inline-block font-mono text-xs tracking-[0.2em] text-ink bg-amber px-2.5 py-1 rounded-sm uppercase mb-3">Track · Shipment</p>
+        <p class="inline-block font-mono text-xs tracking-[0.2em] text-white bg-amber px-2.5 py-1 rounded-sm uppercase mb-3">Track · Shipment</p>
         <h1 class="font-display text-3xl sm:text-4xl font-semibold text-ink mb-2">Where's your package right now?</h1>
         <p class="text-slate mb-8">Enter the tracking number printed on your waybill receipt to see live status.</p>
     </div>
@@ -262,11 +262,11 @@
             <div class="route-track">
                 <div id="progressBar" class="route-fill bg-route" style="width:0%"></div>
                 <div id="routeMarker" class="route-marker" style="left:0%">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0169CC" stroke-width="1.8">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8">
                         <rect x="1" y="7" width="13" height="9" rx="1"/>
                         <path d="M14 10h4l3 3v3h-7z"/>
-                        <circle cx="6" cy="18" r="1.6" fill="#0169CC" stroke="none"/>
-                        <circle cx="17" cy="18" r="1.6" fill="#0169CC" stroke="none"/>
+                        <circle cx="6" cy="18" r="1.6" fill="#2563EB" stroke="none"/>
+                        <circle cx="17" cy="18" r="1.6" fill="#2563EB" stroke="none"/>
                     </svg>
                 </div>
             </div>
@@ -368,14 +368,14 @@ function trackOrder() {
 
             let isDelivered = ['success_delivery', 'partial_return'].includes(order.status);
 
-            badge.classList.remove('text-route', 'text-alert', 'text-amber', 'bg-amber', 'text-ink', 'border-transparent');
+            badge.classList.remove('text-route', 'text-alert', 'text-amber', 'bg-amber', 'text-ink', 'text-white', 'border-transparent');
             if (isFailed) {
                 badge.classList.add('text-alert');
             } else if (isDelivered) {
                 badge.classList.add('text-route');
             } else {
-                // in-progress: filled yellow chip reads better than yellow text on white
-                badge.classList.add('bg-amber', 'text-ink', 'border-transparent');
+                // in-progress: filled navy chip with white text (secondary is dark, so it needs light text)
+                badge.classList.add('bg-amber', 'text-white', 'border-transparent');
             }
 
             // STEP DEFINITIONS
