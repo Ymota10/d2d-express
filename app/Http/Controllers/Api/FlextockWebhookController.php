@@ -324,7 +324,7 @@ class FlextockWebhookController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            'pick up' => 'pickup_request',
+            'pick up' => 'out_for_delivery',
 
             /*
             |--------------------------------------------------------------------------
