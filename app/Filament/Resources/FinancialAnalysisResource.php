@@ -40,36 +40,113 @@ class FinancialAnalysisResource extends Resource
     {
         $user = Auth::user();
 
-        // Base query: success_delivery + undelivered (both visible)
+        // Base Query
         $query = Order::query()
-            ->whereIn('status', ['success_delivery', 'undelivered', 'returned_to_shipper', 'partial_return']);
-        // Restrict to shipper’s own orders if not admin
+            ->whereIn('status', [
+                'success_delivery',
+                'undelivered',
+                'returned_to_shipper',
+                'partial_return',
+            ]);
+
         if ($user->isShipper()) {
             $query->where('users_id', $user->id);
         }
 
+        /*
+         * Invoice mode.
+         *
+         * Only activate this filter when we explicitly
+         * came here after uploading an invoice.
+         */
+        $invoiceOrderIds = session('flextock_invoice_selected_ids');
+
+        if (
+            request()->boolean('invoice_filter') &&
+            is_array($invoiceOrderIds)
+        ) {
+            $query->whereIn('id', $invoiceOrderIds);
+        }
+
         return $table
             ->query($query)
+
             ->columns([
-                Tables\Columns\TextColumn::make('waybill_number')->label('Waybill')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('order_id')->label('Order ID')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('user.name')->label('Shipper')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('area.name')->label('Area')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('city.name')->label('City')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_name')->label('Receiver')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_mobile_1')->label('Receiver Mobile 1')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_mobile_2')->label('Receiver Mobile 2')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('waybill_number')
+                    ->label('Waybill')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('order_id')
+                    ->label('Order ID')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Shipper')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('area.name')
+                    ->label('Area')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('city.name')
+                    ->label('City')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('receiver_name')
+                    ->label('Receiver')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('receiver_mobile_1')
+                    ->label('Receiver Mobile 1')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('receiver_mobile_2')
+                    ->label('Receiver Mobile 2')
+                    ->searchable()
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('receiver_address')
                     ->label('Address')
                     ->limit(50)
                     ->tooltip(fn ($record) => $record->receiver_address)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('item_name')->label('Item')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('quantity')->label('Qty')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('size')->label('Size')->sortable(),
-                Tables\Columns\TextColumn::make('weight')->label('Weight')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('cod_amount')->label('COD Amount')->money('EGP')->sortable(),
-                Tables\Columns\TextColumn::make('delivery_cost')->label('Delivery Cost')->sortable()->searchable(),
+
+                Tables\Columns\TextColumn::make('item_name')
+                    ->label('Item')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('quantity')
+                    ->label('Qty')
+                    ->numeric()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('size')
+                    ->label('Size')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('weight')
+                    ->label('Weight')
+                    ->numeric()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('cod_amount')
+                    ->label('COD Amount')
+                    ->money('EGP')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('delivery_cost')
+                    ->label('Delivery Cost')
+                    ->sortable()
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('insurancePackage.name')
                     ->label('Insurance')
                     ->placeholder('No Insurance')
@@ -80,11 +157,6 @@ class FinancialAnalysisResource extends Resource
                     ->label('Insurance Fee')
                     ->money('EGP')
                     ->sortable(),
-
-                // Tables\Columns\TextColumn::make('insured_amount')
-                //     ->label('Insured Amount')
-                //     ->money('EGP')
-                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service Type')
@@ -132,7 +204,9 @@ class FinancialAnalysisResource extends Resource
                         'danger' => 'no',
                     ]),
 
-                Tables\Columns\TextColumn::make('open_package_fee')->numeric()->sortable(),
+                Tables\Columns\TextColumn::make('open_package_fee')
+                    ->numeric()
+                    ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_collected')
                     ->label('Collected')
@@ -142,130 +216,245 @@ class FinancialAnalysisResource extends Resource
                     ->trueColor('success')
                     ->falseColor('danger'),
 
-                Tables\Columns\TextColumn::make('created_at')->label('Created At')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created At')
+                    ->dateTime()
+                    ->sortable(),
             ])
             ->filters([
 
-                // 📅 Date Range Filter
                 Filter::make('date_range')
                     ->form([
-                        Forms\Components\DatePicker::make('from')->label('From Date'),
-                        Forms\Components\DatePicker::make('to')->label('To Date'),
+                        Forms\Components\DatePicker::make('from')
+                            ->label('From Date'),
+
+                        Forms\Components\DatePicker::make('to')
+                            ->label('To Date'),
                     ])
-                    ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['from'], fn ($q, $date) => $q->whereDate('updated_at', '>=', $date))
-                        ->when($data['to'], fn ($q, $date) => $q->whereDate('updated_at', '<=', $date))
+                    ->query(
+                        fn (Builder $query, array $data) => $query
+                            ->when(
+                                $data['from'],
+                                fn ($q, $date) => $q->whereDate('updated_at', '>=', $date)
+                            )
+                            ->when(
+                                $data['to'],
+                                fn ($q, $date) => $q->whereDate('updated_at', '<=', $date)
+                            )
                     ),
 
-                // 🔍 Keyword Filter
                 Filter::make('keyword')
                     ->form([
                         Forms\Components\TextInput::make('keyword')
                             ->label('Keyword')
                             ->placeholder('Enter receiver or item name...'),
                     ])
-                    ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['keyword'], fn ($q, $keyword) => $q->where(fn ($subQuery) => $subQuery
-                            ->where('receiver_name', 'like', "%{$keyword}%")
-                            ->orWhere('item_name', 'like', "%{$keyword}%")
-                        ))
+                    ->query(
+                        fn (Builder $query, array $data) => $query
+                            ->when(
+                                $data['keyword'],
+                                fn ($q, $keyword) => $q->where(function ($subQuery) use ($keyword) {
+                                    $subQuery
+                                        ->where(
+                                            'receiver_name',
+                                            'like',
+                                            "%{$keyword}%"
+                                        )
+                                        ->orWhere(
+                                            'item_name',
+                                            'like',
+                                            "%{$keyword}%"
+                                        );
+                                })
+                            )
                     ),
 
-                // 🧍‍♂️ Shipper Filter (Admins only)
                 Tables\Filters\SelectFilter::make('users_id')
                     ->label('Shipper')
                     ->options(
-                        \App\Models\User::where('management', 'shipper')->pluck('name', 'id')
+                        \App\Models\User::where(
+                            'management',
+                            'shipper'
+                        )->pluck('name', 'id')
                     )
                     ->searchable()
-                    ->visible(fn () => auth()->user()?->management === 'admin'),
+                    ->visible(
+                        fn () => auth()->user()?->management === 'admin'
+                    ),
 
-                // 💰 Collected Status Filter
                 Tables\Filters\SelectFilter::make('is_collected')
                     ->label('Collected Status')
                     ->options([
                         1 => 'Collected',
                         0 => 'Not Collected',
                     ])
-                    ->query(function (Builder $query, array $data) {
+                    ->query(function (
+                        Builder $query,
+                        array $data
+                    ) {
                         if ($data['value'] !== null) {
-                            $query->where('is_collected', $data['value']);
+                            $query->where(
+                                'is_collected',
+                                $data['value']
+                            );
                         }
                     }),
-
             ])
-
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
 
-                    // ✅ Admins only: Collection
                     Tables\Actions\BulkAction::make('collection')
                         ->label('Collection')
                         ->icon('heroicon-o-archive-box-arrow-down')
                         ->color('success')
-                        ->visible(fn () => auth()->user()?->isAdmin()) // 👈 show only to admins
+                        ->visible(
+                            fn () => auth()->user()?->isAdmin()
+                        )
                         ->requiresConfirmation()
                         ->form(function ($records) {
-                            $records = $records->where('is_collected', false);
+
+                            $records = $records
+                                ->where('is_collected', false);
 
                             $totalCod = $records
-                                ->whereIn('status', ['success_delivery', 'partial_return'])
+                                ->whereIn(
+                                    'status',
+                                    [
+                                        'success_delivery',
+                                        'partial_return',
+                                    ]
+                                )
                                 ->sum('cod_amount');
 
-                            $totalShipping = $records->sum('delivery_cost');
-                            $totalInsurance = $records->sum('insurance_fee');
-                            $openPackageFees = $records->sum('open_package_fee');
-                            $netValue = $totalCod - $totalShipping - $totalInsurance - $openPackageFees;
+                            $totalShipping =
+                                $records->sum('delivery_cost');
+
+                            $totalInsurance =
+                                $records->sum('insurance_fee');
+
+                            $openPackageFees =
+                                $records->sum('open_package_fee');
+
+                            $netValue =
+                                $totalCod
+                                - $totalShipping
+                                - $totalInsurance
+                                - $openPackageFees;
+
                             $count = $records->count();
 
-                            // ✅ count per status
-                            $successCount = $records->where('status', 'success_delivery')->count();
-                            $undeliveredCount = $records->where('status', 'undelivered')->count();
-                            $partialReturnCount = $records->where('status', 'partial_return')->count();
+                            $successCount =
+                                $records
+                                    ->where(
+                                        'status',
+                                        'success_delivery'
+                                    )
+                                    ->count();
+
+                            $undeliveredCount =
+                                $records
+                                    ->where(
+                                        'status',
+                                        'undelivered'
+                                    )
+                                    ->count();
+
+                            $partialReturnCount =
+                                $records
+                                    ->where(
+                                        'status',
+                                        'partial_return'
+                                    )
+                                    ->count();
 
                             return [
 
-                                Forms\Components\Placeholder::make('orders_count')
+                                Forms\Components\Placeholder::make(
+                                    'orders_count'
+                                )
                                     ->label('Total Orders')
                                     ->content($count),
 
-                                // ✅ NEW: Success delivery count
-                                Forms\Components\Placeholder::make('success_delivery_count')
+                                Forms\Components\Placeholder::make(
+                                    'success_delivery_count'
+                                )
                                     ->label('Success Delivery')
                                     ->content($successCount),
 
-                                // ✅ NEW: Undelivered count
-                                Forms\Components\Placeholder::make('undelivered_count')
+                                Forms\Components\Placeholder::make(
+                                    'undelivered_count'
+                                )
                                     ->label('Undelivered')
                                     ->content($undeliveredCount),
 
-                                // ✅ NEW: Partial return count
-                                Forms\Components\Placeholder::make('partial_return_count')
+                                Forms\Components\Placeholder::make(
+                                    'partial_return_count'
+                                )
                                     ->label('Partial Delivery')
                                     ->content($partialReturnCount),
 
-                                Forms\Components\Placeholder::make('total_cod')
+                                Forms\Components\Placeholder::make(
+                                    'total_cod'
+                                )
                                     ->label('Total COD Collected')
-                                    ->content(number_format($totalCod, 2).' EGP'),
+                                    ->content(
+                                        number_format(
+                                            $totalCod,
+                                            2
+                                        ).' EGP'
+                                    ),
 
-                                Forms\Components\Placeholder::make('total_shipping')
+                                Forms\Components\Placeholder::make(
+                                    'total_shipping'
+                                )
                                     ->label('Total Shipping Fees')
-                                    ->content(number_format($totalShipping, 2).' EGP'),
+                                    ->content(
+                                        number_format(
+                                            $totalShipping,
+                                            2
+                                        ).' EGP'
+                                    ),
 
-                                Forms\Components\Placeholder::make('total_open_package')
-                                    ->label('Total Open Package Fees')
-                                    ->content(number_format($openPackageFees, 2).' EGP'),
+                                Forms\Components\Placeholder::make(
+                                    'total_open_package'
+                                )
+                                    ->label(
+                                        'Total Open Package Fees'
+                                    )
+                                    ->content(
+                                        number_format(
+                                            $openPackageFees,
+                                            2
+                                        ).' EGP'
+                                    ),
 
-                                Forms\Components\Placeholder::make('total_insurance')
-                                    ->label('Total Insurance Fees')
-                                    ->content(number_format($totalInsurance, 2).' EGP'),
+                                Forms\Components\Placeholder::make(
+                                    'total_insurance'
+                                )
+                                    ->label(
+                                        'Total Insurance Fees'
+                                    )
+                                    ->content(
+                                        number_format(
+                                            $totalInsurance,
+                                            2
+                                        ).' EGP'
+                                    ),
 
-                                // ✅ NEW NET VALUE
-                                Forms\Components\Placeholder::make('net_value')
+                                Forms\Components\Placeholder::make(
+                                    'net_value'
+                                )
                                     ->label('Net Value')
-                                    ->content(number_format($netValue, 2).' EGP'),
+                                    ->content(
+                                        number_format(
+                                            $netValue,
+                                            2
+                                        ).' EGP'
+                                    ),
 
-                                Forms\Components\Radio::make('extra_type')
+                                Forms\Components\Radio::make(
+                                    'extra_type'
+                                )
                                     ->label('Extra Fees Type')
                                     ->options([
                                         'fixed' => 'Fixed Amount',
@@ -274,45 +463,77 @@ class FinancialAnalysisResource extends Resource
                                     ])
                                     ->default('none'),
 
-                                Forms\Components\TextInput::make('extra_value')
+                                Forms\Components\TextInput::make(
+                                    'extra_value'
+                                )
                                     ->label('Extra Value')
                                     ->numeric()
                                     ->default(0),
                             ];
                         })
                         ->action(function ($records, array $data) {
-                            $records = $records->where('is_collected', false);
+
+                            $records = $records
+                                ->where('is_collected', false);
 
                             $totalCod = $records
-                                ->whereIn('status', ['success_delivery', 'partial_return'])
+                                ->whereIn(
+                                    'status',
+                                    [
+                                        'success_delivery',
+                                        'partial_return',
+                                    ]
+                                )
                                 ->sum('cod_amount');
-                            $totalShipping = $records->sum('delivery_cost');
-                            $openPackageFees = $records->sum('open_package_fee'); // ✅ deduct open package fee
-                            $totalInsurance = $records->sum('insurance_fee');
+
+                            $totalShipping =
+                                $records->sum('delivery_cost');
+
+                            $openPackageFees =
+                                $records->sum('open_package_fee');
+
+                            $totalInsurance =
+                                $records->sum('insurance_fee');
+
                             $extra = 0;
 
-                            if ($data['extra_type'] === 'fixed') {
-                                $extra = (float) $data['extra_value'];
-                            } elseif ($data['extra_type'] === 'percent') {
-                                $extra = $totalCod * ((float) $data['extra_value'] / 100);
+                            if (
+                                $data['extra_type'] === 'fixed'
+                            ) {
+                                $extra =
+                                    (float) $data['extra_value'];
+
+                            } elseif (
+                                $data['extra_type'] === 'percent'
+                            ) {
+                                $extra =
+                                    $totalCod *
+                                    (
+                                        (float)
+                                        $data['extra_value'] /
+                                        100
+                                    );
                             }
 
-                            // ✅ Deduct open package fees from net profit
                             $finalAmount =
-                            $totalCod
-                            - $totalShipping
-                            - $openPackageFees
-                            - $totalInsurance
-                            - $extra;
-                            // ✅ Get shipper ID (from the first order in the group)
-                            $shipperId = $records->first()->shipper_id ?? null;
+                                $totalCod
+                                - $totalShipping
+                                - $openPackageFees
+                                - $totalInsurance
+                                - $extra;
 
-                            // ✅ Create Payment Report
+                            $shipperId =
+                                $records->first()?->shipper_id;
+
                             $report = PaymentReport::create([
-                                'user_id' => auth()->id(), // Admin who created the report
-                                'shipper_id' => $shipperId, // Shipper receiving the payment
+                                'user_id' => auth()->id(),
+                                'shipper_id' => $shipperId,
 
-                                'order_ids' => json_encode($records->pluck('id')->toArray()),
+                                'order_ids' => json_encode(
+                                    $records
+                                        ->pluck('id')
+                                        ->toArray()
+                                ),
 
                                 'total_cod' => $totalCod,
 
@@ -327,27 +548,37 @@ class FinancialAnalysisResource extends Resource
                                 'final_amount' => $finalAmount,
                             ]);
 
-                            // ✅ Mark collected orders
                             foreach ($records as $order) {
-                                $order->update(['is_collected' => true]);
+                                $order->update([
+                                    'is_collected' => true,
+                                ]);
                             }
 
-                            return redirect(\App\Filament\Resources\PaymentReportResource::getUrl('index'));
+                            return redirect()->to(
+                                \App\Filament\Resources\PaymentReportResource::getUrl('index')
+                            );
                         }),
 
-                    // ✅ Everyone can export
-                    Tables\Actions\BulkAction::make('export_selected')
+                    Tables\Actions\BulkAction::make(
+                        'export_selected'
+                    )
                         ->label('Export Selected')
-                        ->icon('heroicon-o-arrow-down-tray')
+                        ->icon(
+                            'heroicon-o-arrow-down-tray'
+                        )
                         ->color('success')
                         ->requiresConfirmation()
                         ->action(function ($records) {
-                            $ids = $records->pluck('id')->toArray();
 
-                            return \Maatwebsite\Excel\Facades\Excel::download(
-                                new \App\Exports\OrdersExport($ids),
-                                'D2D_financial_analysis.xlsx'
-                            );
+                            $ids = $records
+                                ->pluck('id')
+                                ->toArray();
+
+                            return
+                                \Maatwebsite\Excel\Facades\Excel::download(
+                                    new \App\Exports\OrdersExport($ids),
+                                    'D2D_financial_analysis.xlsx'
+                                );
                         }),
                 ]),
             ]);
