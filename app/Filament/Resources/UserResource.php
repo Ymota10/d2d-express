@@ -64,7 +64,7 @@ class UserResource extends Resource
 
             Forms\Components\TextInput::make('national_id')
                 ->label('National ID')
-                ->required()
+                // ->required()
                 ->unique(ignoreRecord: true),
 
             Forms\Components\Select::make('city_id')
@@ -75,7 +75,7 @@ class UserResource extends Resource
                 ->required(),
 
             Forms\Components\Select::make('branch_id')
-                ->label('Branch')
+                ->label('Shipping Tier')
                 ->relationship('branch', 'name')
                 ->preload()
                 ->searchable()
