@@ -192,6 +192,7 @@ class FinancialAnalysisResource extends Resource
                     ]),
 
                 Tables\Columns\TextColumn::make('open_package_fee')
+                    ->label('Open Package Fees')
                     ->numeric()
                     ->sortable(),
 
@@ -237,7 +238,7 @@ class FinancialAnalysisResource extends Resource
                     ->color('success'),
 
                 Tables\Columns\TextColumn::make('insurance_fee')
-                    ->label('Insurance Fee')
+                    ->label('Insurance Fees')
                     ->money('EGP')
                     ->sortable(),
 

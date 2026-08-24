@@ -406,10 +406,14 @@ class OrderResource extends Resource
     {
         return $table
             ->columns([
+
                 Tables\Columns\TextColumn::make('waybill_number')
                     ->label('Waybill No.')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->color('primary')
+                    ->url(fn ($record) => static::getUrl('edit', ['record' => $record]))
+                    ->openUrlInNewTab(),
 
                 Tables\Columns\TextColumn::make('user.name')->label('Shipper')->sortable()
                     ->visible(fn () => Auth::user()->management === 'admin'), // ✅ Only admin can see
@@ -540,6 +544,7 @@ class OrderResource extends Resource
                     ->sortable(),
 
             ])
+
             ->filters([
 
                 // 📅 Date Range Filter
@@ -637,6 +642,7 @@ class OrderResource extends Resource
                     )
                     ),
             ])
+
             ->actions([
                 Tables\Actions\ViewAction::make(),
 
@@ -882,7 +888,9 @@ class OrderResource extends Resource
                             );
                         }),
                 ])),
-            ]);
+            ])
+
+            ->recordUrl(null);
 
     }
 
