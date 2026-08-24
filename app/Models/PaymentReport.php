@@ -16,6 +16,9 @@ class PaymentReport extends Model
         'final_amount',
         'total_open_package_fees',
         'total_insurance_fees',
+        'is_transferred',
+        'transaction_reference_number',
+
     ];
 
     protected $casts = [
