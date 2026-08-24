@@ -18,6 +18,8 @@ class FlyersResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-square-3-stack-3d';
 
+    protected static ?int $navigationSort = 2;
+
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->user()?->management !== 'track_express';

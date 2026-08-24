@@ -26,7 +26,8 @@ class ComplaintResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->management !== 'track_express';
+        // return auth()->user()?->management !== 'track_express';
+        return false;
     }
 
     public static function getNavigationBadge(): ?string

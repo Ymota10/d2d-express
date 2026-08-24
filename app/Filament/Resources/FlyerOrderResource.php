@@ -19,6 +19,8 @@ class FlyerOrderResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-paper-airplane';
 
+    protected static ?int $navigationSort = 3;
+
     // ✅ Only show in sidebar for admins
     public static function shouldRegisterNavigation(): bool
     {
