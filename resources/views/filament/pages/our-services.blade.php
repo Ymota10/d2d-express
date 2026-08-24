@@ -1,103 +1,94 @@
 <x-filament::page>
-<div class="space-y-12"> <!-- increased vertical spacing between sections -->
+    <div class="space-y-12">
+
+        {{-- Intro --}}
+        <div class="max-w-2xl">
+
+            <h1 class="mt-3 text-2xl font-bold text-gray-950 dark:text-white sm:text-3xl">
+                Everything You Need to Ship, Store, and Get Paid
+            </h1>
+
+            <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400 sm:text-base">
+                From pickup to doorstep to daily settlement, Lynk covers every step of the delivery
+                journey so you can focus on running your business.
+            </p>
+        </div>
+
+        {{-- Services grid --}}
+        <div class="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+
+            @foreach([
+                [
+                    'title' => 'Nationwide Delivery',
+                    'desc' => 'Reliable door-to-door delivery reaching every governorate in Egypt.',
+                    'icon' => 'heroicon-o-truck',
+                    'points' => ['27 governorates covered', 'Live status updates on every stop'],
+                ],
+                [
+                    'title' => 'Same-Day & Express',
+                    'desc' => 'Priority routing for time-sensitive shipments that can\'t wait.',
+                    'icon' => 'heroicon-o-bolt',
+                    'points' => ['Same-day pickup slots', 'Priority handling at every hub'],
+                ],
+                [
+                    'title' => 'Cash-on-Delivery Collection',
+                    'desc' => 'We collect COD on your behalf and settle it back to you daily.',
+                    'icon' => 'heroicon-o-banknotes',
+                    'points' => ['Daily settlement cycle', 'Full collection transparency'],
+                ],
+                [
+                    'title' => 'Warehousing & Fulfillment',
+                    'desc' => 'Store inventory and let us pack and ship orders as they come in.',
+                    'icon' => 'heroicon-o-building-storefront',
+                    'points' => ['Pick, pack &amp; ship handled for you', 'Real-time stock visibility'],
+                ],
+                [
+                    'title' => 'Returns & Reverse Logistics',
+                    'desc' => 'A smooth return path for customers, with minimal handling for you.',
+                    'icon' => 'heroicon-o-arrow-uturn-left',
+                    'points' => ['Managed pickup for returns', 'Condition checks before restock'],
+                ],
+                [
+                    'title' => 'Shipment Insurance',
+                    'desc' => 'Every parcel can be covered against loss or damage in transit.',
+                    'icon' => 'heroicon-o-shield-check',
+                    'points' => ['Optional coverage per shipment', 'Straightforward claims process'],
+                ],
+            ] as $service)
+
+                <div class="flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-blue-500/30">
+
+                    <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-[#2563EB] dark:bg-blue-500/10 dark:text-blue-400">
+                        <x-filament::icon :icon="$service['icon']" class="h-6 w-6" />
+                    </div>
+
+                    <h3 class="mt-4 text-base font-semibold text-gray-950 dark:text-white">
+                        {{ $service['title'] }}
+                    </h3>
+
+                    <p class="mt-1.5 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                        {{ $service['desc'] }}
+                    </p>
+
+                    <ul class="mt-4 space-y-2 border-t border-gray-100 pt-4 dark:border-white/10">
+                        @foreach($service['points'] as $point)
+                            <li class="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <x-filament::icon icon="heroicon-s-check" class="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#2563EB] dark:text-blue-400" />
+                                {!! $point !!}
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+
+            @endforeach
+
+        </div>
         
-<!-- Banner -->
-<div class="rounded-3xl p-6 flex items-center justify-between shadow border border-green-300"
-     style="background: linear-gradient(#ffe338);">
-    <div class="text-black"> <!-- Force all text inside to be black -->
-        <div class="flex items-center mb-3">
-            <x-filament::icon icon="heroicon-m-arrow-path-rounded-square" class="w-5 h-5 text-green-600 mr-3" />
-            <span class="!text-black font-medium">
-                FROM DOOR TO DOOR
-            </span>
-        </div>
 
-        <h2 class="text-3xl font-bold !text-black">
-            Ship Smarter with D2D Express
-        </h2>
-
-        <p class="mt-2 !text-black">
-            Expand your reach, deliver all around Egypt, and grow your business with our seamless door-to-door shipping solutions.
+        {{-- Closing note --}}
+        <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+            Need a service that isn't listed here? Reach out to your account manager to discuss it.
         </p>
-    </div>
-
-    <!-- Right side airplane illustration -->
-    <x-filament::icon icon="heroicon-o-rocket-launch" class="hidden md:block w-32 h-32 text-green-300 opacity-30" />
-</div>
-
-
-        <!-- Integrations Section -->
-        <div class="space-y-4 pt-4 border-t border-gray-200"> <!-- added top padding + subtle divider -->
-            <h3 class="text-xl font-semibold text-gray-800 flex items-center">
-                <x-filament::icon icon="heroicon-s-link" class="w-5 h-5 text-green-500 mr-2" />
-                Integrations
-            </h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> <!-- increased gap between cards -->
-                @foreach ([ 
-                    ['title' => 'Connect your Shopify store', 'desc' => 'Automatically sync your store orders.', 'icon' => 'heroicon-o-puzzle-piece'],
-                    ['title' => 'Connect your WooCommerce store', 'desc' => 'Manage your store and shipments easily.', 'icon' => 'heroicon-o-puzzle-piece'],
-                    ['title' => 'Connect via API', 'desc' => 'Integrate with any system using APIs.', 'icon' => 'heroicon-o-puzzle-piece'],
-                ] as $service)
-                    <x-filament::card>
-                        <div class="flex items-start space-x-3">
-                            <x-filament::icon :icon="$service['icon']" class="w-6 h-6 text-green-500" />
-                            <div>
-                                <h4 class="font-semibold text-gray-800">{{ $service['title'] }}</h4>
-                                <p class="text-gray-500 text-sm">{{ $service['desc'] }}</p>
-                            </div>
-                        </div>
-                    </x-filament::card>
-                @endforeach
-            </div>
-        </div>
-  <!-- Finance Section -->
-<div class="space-y-4 pt-4 border-t border-gray-200">
-    <h3 class="text-xl font-semibold text-gray-800 flex items-center">
-        <x-filament::icon icon="heroicon-o-currency-dollar" class="w-5 h-5 text-green-500 mr-2" />
-        Finances
-    </h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> <!-- increased gap -->
-        @foreach ([ 
-            ['title' => 'Daily profit transfers', 'desc' => 'Receive your cash collections daily.', 'icon' => 'heroicon-o-banknotes'],
-            ['title' => 'Financial Reports', 'desc' => 'ALL your collections saved in our system.', 'icon' => 'heroicon-o-chart-bar'],
-        ] as $finance)
-            <x-filament::card>
-                <div class="flex items-start space-x-3">
-                    <x-filament::icon :icon="$finance['icon']" class="w-6 h-6 text-green-500" />
-                    <div>
-                        <h4 class="font-semibold text-gray-800">{{ $finance['title'] }}</h4>
-                        <p class="text-gray-500 text-sm">{{ $finance['desc'] }}</p>
-                    </div>
-                </div>
-            </x-filament::card>
-        @endforeach
-    </div>
-</div>
-
-<!-- Management Section -->
-<div class="space-y-4 pt-4 border-t border-gray-200">
-    <h3 class="text-xl font-semibold text-gray-800 flex items-center">
-        <x-filament::icon icon="heroicon-c-cog-6-tooth" class="w-5 h-5 text-green-500 mr-2" />
-        Management
-    </h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6"> <!-- increased gap -->
-        @foreach ([ 
-            ['title' => 'Store your products', 'desc' => 'Store, pack and shipping made easily.', 'icon' => 'heroicon-c-building-storefront'],
-            ['title' => 'Shipment Insurance', 'desc' => 'Insure your products to apply compensations for any lost or damaged shipments.', 'icon' => 'heroicon-o-check-badge'],
-            ['title' => 'Customer Caring', 'desc' => 'Dedicated support from your account manager.', 'icon' => 'heroicon-o-user-group'],
-        ] as $service)
-            <x-filament::card>
-                <div class="flex items-start space-x-3">
-                    <x-filament::icon :icon="$service['icon']" class="w-6 h-6 text-green-500" />
-                    <div>
-                        <h4 class="font-semibold text-gray-800">{{ $service['title'] }}</h4>
-                        <p class="text-gray-500 text-sm">{{ $service['desc'] }}</p>
-                    </div>
-                </div>
-            </x-filament::card>
-        @endforeach
-    </div>
-</div>
 
     </div>
 </x-filament::page>

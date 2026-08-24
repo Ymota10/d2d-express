@@ -73,90 +73,15 @@ class FinancialAnalysisResource extends Resource
 
             ->columns([
                 Tables\Columns\TextColumn::make('waybill_number')
-                    ->label('Waybill')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('order_id')
-                    ->label('Order ID')
+                    ->label('Waybill No.')
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Shipper')
                     ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('area.name')
-                    ->label('Area')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('city.name')
-                    ->label('City')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('receiver_name')
-                    ->label('Receiver')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('receiver_mobile_1')
-                    ->label('Receiver Mobile 1')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('receiver_mobile_2')
-                    ->label('Receiver Mobile 2')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('receiver_address')
-                    ->label('Address')
-                    ->limit(50)
-                    ->tooltip(fn ($record) => $record->receiver_address)
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('item_name')
-                    ->label('Item')
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('quantity')
-                    ->label('Qty')
-                    ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('size')
-                    ->label('Size')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('weight')
-                    ->label('Weight')
-                    ->numeric()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('cod_amount')
-                    ->label('COD Amount')
-                    ->money('EGP')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('delivery_cost')
-                    ->label('Delivery Cost')
                     ->sortable()
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('insurancePackage.name')
-                    ->label('Insurance')
-                    ->placeholder('No Insurance')
-                    ->badge()
-                    ->color('success'),
-
-                Tables\Columns\TextColumn::make('insurance_fee')
-                    ->label('Insurance Fee')
-                    ->money('EGP')
-                    ->sortable(),
+                    ->visible(fn () => Auth::user()->management === 'admin'), // ✅ Only admin can see
 
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service Type')
@@ -168,6 +93,36 @@ class FinancialAnalysisResource extends Resource
                         'same_day_delivery' => 'Same Day Delivery',
                         default => ucfirst(str_replace('_', ' ', $state)),
                     }),
+
+                Tables\Columns\TextColumn::make('receiver_name')
+                    ->label('Receiver Name')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('receiver_mobile_1')
+                    ->label('Receiver Mobile 1')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('area.name')
+                    ->label('Area')
+                    ->searchable()
+                    ->sortable(),
+
+                // Tables\Columns\TextColumn::make('order_id')
+                //     ->label('Order ID')
+                //     ->searchable()
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('city.name')
+                //     ->label('City')
+                //     ->searchable()
+                //     ->sortable(),
+
+                Tables\Columns\TextColumn::make('cod_amount')
+                    ->label('COD Amount')
+                    ->money('EGP')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -197,6 +152,38 @@ class FinancialAnalysisResource extends Resource
                         default => 'secondary',
                     }),
 
+                Tables\Columns\BadgeColumn::make('attempts_visual')
+                    ->label('Attempts')
+                    ->getStateUsing(function ($record) {
+                        return $record->attempts()->count();
+                    })
+                    ->formatStateUsing(function ($state) {
+                        return $state.' / 3';
+                    })
+                    ->colors([
+                        'success' => fn ($state) => $state === 1,   // ✅ 1/3 = green
+                        'warning' => fn ($state) => $state === 2,   // ✅ 2/3 = yellow
+                        'danger' => fn ($state) => $state >= 3,    // ✅ 3+/3 = red
+                    ])
+                    ->icons([
+                        'heroicon-o-check-circle' => fn ($state) => $state === 1,
+                        'heroicon-o-arrow-path' => fn ($state) => $state === 2,
+                        'heroicon-o-exclamation-triangle' => fn ($state) => $state >= 3,
+                    ])
+                    ->sortable(
+                        query: function ($query, $direction) {
+                            $query->withCount('attempts')
+                                ->orderBy('attempts_count', $direction);
+                        }
+                    )
+                    ->tooltip(function ($record) {
+                        $last = $record->attempts()->latest()->first();
+
+                        return $last
+                            ? 'Last attempt: '.ucfirst(str_replace('_', ' ', $last->status))
+                            : 'No attempts yet';
+                    }),
+
                 Tables\Columns\BadgeColumn::make('open_package')
                     ->label('Open Package')
                     ->colors([
@@ -206,6 +193,52 @@ class FinancialAnalysisResource extends Resource
 
                 Tables\Columns\TextColumn::make('open_package_fee')
                     ->numeric()
+                    ->sortable(),
+
+                // Tables\Columns\TextColumn::make('receiver_mobile_2')
+                //     ->label('Receiver Mobile 2')
+                //     ->searchable()
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('receiver_address')
+                //     ->label('Address')
+                //     ->limit(50)
+                //     ->tooltip(fn ($record) => $record->receiver_address)
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('item_name')
+                //     ->label('Item')
+                //     ->searchable()
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('quantity')
+                //     ->label('Qty')
+                //     ->numeric()
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('size')
+                //     ->label('Size')
+                //     ->sortable(),
+
+                // Tables\Columns\TextColumn::make('weight')
+                //     ->label('Weight')
+                //     ->numeric()
+                //     ->sortable(),
+
+                Tables\Columns\TextColumn::make('delivery_cost')
+                    ->label('Delivery Cost')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('insurancePackage.name')
+                    ->label('Insurance')
+                    ->placeholder('No Insurance')
+                    ->badge()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('insurance_fee')
+                    ->label('Insurance Fee')
+                    ->money('EGP')
                     ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_collected')

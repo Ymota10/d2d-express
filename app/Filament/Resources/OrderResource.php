@@ -410,16 +410,10 @@ class OrderResource extends Resource
                     ->label('Waybill No.')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('user.name')->label('Shipper')->sortable(),
-                // ->visible(fn () => Auth::user()->management === 'admin'), // ✅ Only admin can see
 
-                Tables\Columns\TextColumn::make('area.name')->label('Area')->sortable(),
-                Tables\Columns\TextColumn::make('receiver_address')->sortable(),
-                Tables\Columns\TextColumn::make('receiver_name')->searchable(),
-                Tables\Columns\TextColumn::make('receiver_mobile_1')->searchable(),
-                Tables\Columns\TextColumn::make('item_name'),
-                Tables\Columns\TextColumn::make('size'),
-                Tables\Columns\TextColumn::make('cod_amount')->numeric()->sortable(),
+                Tables\Columns\TextColumn::make('user.name')->label('Shipper')->sortable()
+                    ->visible(fn () => Auth::user()->management === 'admin'), // ✅ Only admin can see
+
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service Type')
                     ->badge()
@@ -431,6 +425,13 @@ class OrderResource extends Resource
                         default => ucfirst(str_replace('_', ' ', $state)),
                     }),
 
+                // Tables\Columns\TextColumn::make('receiver_address')->sortable(),
+                Tables\Columns\TextColumn::make('receiver_name')->label('Receiver Name')->searchable(),
+                Tables\Columns\TextColumn::make('receiver_mobile_1')->label('Receiver Mobile')->searchable(),
+                Tables\Columns\TextColumn::make('area.name')->label('Area')->sortable(),
+                // Tables\Columns\TextColumn::make('item_name'),
+                // Tables\Columns\TextColumn::make('size'),
+                Tables\Columns\TextColumn::make('cod_amount')->label('COD Amount')->numeric()->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -513,26 +514,28 @@ class OrderResource extends Resource
                         'danger' => 'no',
                     ]),
 
-                Tables\Columns\TextColumn::make('insurancePackage.name')
-                    ->label('Insurance')
-                    ->badge()
-                    ->color('success')
-                    ->placeholder('No Insurance')
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('insurancePackage.name')
+                //     ->label('Insurance')
+                //     ->badge()
+                //     ->color('success')
+                //     ->placeholder('No Insurance')
+                //     ->sortable(),
 
-                Tables\Columns\TextColumn::make('insurance_fee')
-                    ->label('Insurance Fee')
-                    ->money('EGP')
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('insurance_fee')
+                //     ->label('Insurance Fee')
+                //     ->money('EGP')
+                //     ->sortable(),
 
-                Tables\Columns\TextColumn::make('order_id')->sortable(),
-                Tables\Columns\TextColumn::make('delivery_cost')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('open_package_fee')->numeric()->sortable(),
+                // Tables\Columns\TextColumn::make('order_id')->sortable(),
+                // Tables\Columns\TextColumn::make('delivery_cost')->numeric()->sortable(),
+                // Tables\Columns\TextColumn::make('open_package_fee')->numeric()->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Created At')
                     ->dateTime('M d, Y h:i A') // 12-hour format with AM/PM
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Updated At')
                     ->dateTime('M d, Y h:i A') // 12-hour format with AM/PM
                     ->sortable(),
 

@@ -25,25 +25,6 @@ class OrdersInReportTable extends BaseWidget
             ->query(Order::query()->whereIn('id', $orderIds))
             ->columns([
                 Tables\Columns\TextColumn::make('waybill_number')->label('Waybill')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('order_id')->label('Order ID')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('user.name')->label('Shipper')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('area.name')->label('Area')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('city.name')->label('City')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_name')->label('Receiver')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_mobile_1')->label('Receiver Mobile 1')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_mobile_2')->label('Receiver Mobile 2')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('receiver_address')
-                    ->label('Address')
-                    ->limit(50)
-                    ->tooltip(fn ($record) => $record->receiver_address)
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('item_name')->label('Item')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('quantity')->label('Qty')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('size')->label('Size')->sortable(),
-                Tables\Columns\TextColumn::make('weight')->label('Weight')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('cod_amount')->label('COD Amount')->money('EGP')->sortable(),
-                Tables\Columns\TextColumn::make('delivery_cost')->label('Delivery Cost')->searchable()->sortable(),
-
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service Type')
                     ->badge()
@@ -54,6 +35,25 @@ class OrdersInReportTable extends BaseWidget
                         'same_day_delivery' => 'Same Day Delivery',
                         default => ucfirst(str_replace('_', ' ', $state)),
                     }),
+                // Tables\Columns\TextColumn::make('order_id')->label('Order ID')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('user.name')->label('Shipper')->searchable()->sortable()
+                    ->visible(fn () => auth()->user()?->management === 'admin'),
+                Tables\Columns\TextColumn::make('receiver_name')->label('Receiver Name')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('receiver_mobile_1')->label('Receiver Mobile 1')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('area.name')->label('Area')->searchable()->sortable(),
+                // Tables\Columns\TextColumn::make('city.name')->label('City')->searchable()->sortable(),
+
+                // Tables\Columns\TextColumn::make('receiver_mobile_2')->label('Receiver Mobile 2')->searchable()->sortable(),
+                // Tables\Columns\TextColumn::make('receiver_address')
+                //     ->label('Address')
+                //     ->limit(50)
+                //     ->tooltip(fn ($record) => $record->receiver_address)
+                //     ->sortable(),
+                // Tables\Columns\TextColumn::make('item_name')->label('Item')->searchable()->sortable(),
+                // Tables\Columns\TextColumn::make('quantity')->label('Qty')->numeric()->sortable(),
+                // Tables\Columns\TextColumn::make('size')->label('Size')->sortable(),
+                // Tables\Columns\TextColumn::make('weight')->label('Weight')->numeric()->sortable(),
+                Tables\Columns\TextColumn::make('cod_amount')->label('COD Amount')->money('EGP')->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
@@ -82,6 +82,32 @@ class OrdersInReportTable extends BaseWidget
                         'returned_to_shipper' => 'fourth',
                         default => 'secondary',
                     }),
+
+                Tables\Columns\TextColumn::make('delivery_cost')->label('Delivery Cost')->searchable()->sortable(),
+
+                Tables\Columns\BadgeColumn::make('open_package')
+                    ->label('Open Package')
+                    ->colors([
+                        'success' => 'yes',
+                        'danger' => 'no',
+                    ]),
+
+                Tables\Columns\TextColumn::make('open_package_fee')
+                    ->label('Open Package Fees')
+                    ->numeric()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('insurancePackage.name')
+                    ->label('Insurance')
+                    ->placeholder('No Insurance')
+                    ->badge()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('insurance_fee')
+                    ->label('Insurance Fees')
+                    ->money('EGP')
+                    ->sortable(),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -37,23 +37,28 @@ class PaymentReportResource extends Resource
     {
         return $table
             ->columns([
+
                 Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
+                    ->label('Invoice ID')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Created By')
-                    ->searchable(),
+                    ->searchable()
+                    ->visible(fn () => auth()->user()?->management === 'admin'),
 
                 Tables\Columns\TextColumn::make('shipper.name')
                     ->label('Shipper')
-                    ->searchable(),
+                    ->searchable()
+                    ->visible(fn () => auth()->user()?->management === 'admin'),
 
                 Tables\Columns\TextColumn::make('total_cod')
+                    ->label('Total COD')
                     ->money('EGP')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total_delivery_cost')
+                    ->label('Total Delivery Cost')
                     ->money('EGP')
                     ->sortable(),
 
@@ -68,11 +73,13 @@ class PaymentReportResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('extra_fees')
+                    ->label('Extra Fees')
                     ->money('EGP')
+                    ->description('Minimum 20 EGP deducted per transaction')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('final_amount')
-                    ->label('Final Amount')
+                    ->label('Net Amount')
                     ->money('EGP')
                     ->sortable(),
 
