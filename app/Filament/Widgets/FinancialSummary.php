@@ -69,7 +69,7 @@ class FinancialSummary extends BaseWidget
                 ->chart([20, 23, 26, 30, 35, 39, 33])
                 ->icon('heroicon-o-hand-thumb-down'),
 
-            Stat::make('REPLACEMENT', (clone $ordersQuery)
+            Stat::make('EXCHANGE', (clone $ordersQuery)
                 ->where('service_type', 'replacement')
                 ->where('is_collected', 0)
                 ->count())

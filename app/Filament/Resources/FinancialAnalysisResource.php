@@ -163,7 +163,7 @@ class FinancialAnalysisResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (string $state) => match ($state) {
                         'normal_cod' => 'Normal COD',
-                        'replacement' => 'Replacement',
+                        'replacement' => 'Exchange',
                         'refund' => 'Refund',
                         'same_day_delivery' => 'Same Day Delivery',
                         default => ucfirst(str_replace('_', ' ', $state)),
@@ -288,6 +288,7 @@ class FinancialAnalysisResource extends Resource
                         1 => 'Collected',
                         0 => 'Not Collected',
                     ])
+                    ->default(0)
                     ->query(function (
                         Builder $query,
                         array $data

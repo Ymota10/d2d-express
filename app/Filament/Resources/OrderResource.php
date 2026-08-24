@@ -273,7 +273,7 @@ class OrderResource extends Resource
                     Forms\Components\Select::make('service_type')
                         ->options([
                             'normal_cod' => 'Normal COD',
-                            'replacement' => 'Replacement',
+                            'replacement' => 'Exchange',
                             'refund' => 'Refund',
                         ])
                         ->default('normal_cod')
@@ -425,7 +425,7 @@ class OrderResource extends Resource
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'normal_cod' => 'Normal COD',
-                        'replacement' => 'Replacement',
+                        'replacement' => 'Exchange',
                         'refund' => 'Refund',
                         // 'same_day_delivery' => 'Same Day Delivery',
                         default => ucfirst(str_replace('_', ' ', $state)),
@@ -586,7 +586,7 @@ class OrderResource extends Resource
                     ->label('Service Type')
                     ->options([
                         'normal_cod' => 'Normal COD',
-                        'replacement' => 'Replacement',
+                        'replacement' => 'Exchange',
                         'refund' => 'Refund',
                     ])
                     ->searchable()
