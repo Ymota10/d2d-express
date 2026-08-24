@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PaymentReportResource\Widgets;
 
 use App\Models\Order;
 use App\Models\PaymentReport;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -84,17 +85,68 @@ class OrdersInReportTable extends BaseWidget
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+
+                    /*
+                     * =====================================================
+                     * EXPORT EXCEL
+                     * =====================================================
+                     */
                     Tables\Actions\BulkAction::make('export_selected')
                         ->label('Export Selected')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('success')
                         ->requiresConfirmation()
                         ->action(function ($records) {
-                            $ids = $records->pluck('id')->toArray();
+
+                            $ids = $records
+                                ->pluck('id')
+                                ->toArray();
 
                             return Excel::download(
                                 new \App\Exports\OrdersExport($ids),
-                                'D2D_payment_report_orders.xlsx'
+                                'lynk_payment_report_orders.xlsx'
+                            );
+                        }),
+
+                    /*
+                     * =====================================================
+                     * EXPORT PDF INVOICE
+                     * =====================================================
+                     */
+                    Tables\Actions\BulkAction::make('export_pdf_invoice')
+                        ->label('Export Invoice (PDF)')
+                        ->icon('heroicon-o-document-text')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+
+                            $orders = Order::with([
+                                'user',
+                                'area',
+                                'city',
+                            ])
+                                ->whereIn('id', $records->pluck('id'))
+                                ->get();
+
+                            if ($orders->isEmpty()) {
+                                return;
+                            }
+
+                            $pdf = Pdf::loadView(
+                                'pdf.payment-report-invoice',
+                                [
+                                    'orders' => $orders,
+                                    'paymentReport' => $this->record,
+                                ]
+                            );
+
+                            $pdf->setPaper('A4', 'portrait');
+
+                            return response()->streamDownload(
+                                function () use ($pdf) {
+                                    echo $pdf->output();
+                                },
+                                'lynk_payment_report_invoice.pdf'
                             );
                         }),
                 ]),
