@@ -50,6 +50,7 @@ class Order extends Model
         'status',
         'undelivered_reason',
         'time_scheduled_at',
+        'is_printed',
 
         // Insurance
         'insurance_package_id',

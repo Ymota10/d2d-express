@@ -12,6 +12,7 @@ use ArPHP\I18N\Arabic;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -326,6 +327,8 @@ class OrderResource extends Resource
                                 'returned_and_cost_paid' => 'Returned and cost paid',
                                 'returned_to_warehouse' => 'Returned to Warehouse',
                                 'returned_to_shipper' => 'Returned to Shipper',
+                                'lost' => 'Lost',
+
                             ])
                             ->required()
                             ->reactive()
@@ -415,6 +418,14 @@ class OrderResource extends Resource
                     ->url(fn ($record) => static::getUrl('edit', ['record' => $record]))
                     ->openUrlInNewTab(),
 
+                Tables\Columns\IconColumn::make('is_printed')
+                    ->label('Printed')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-printer')
+                    ->falseIcon('heroicon-o-printer')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
+
                 Tables\Columns\TextColumn::make('user.name')->label('Shipper')->sortable()
                     ->visible(fn () => Auth::user()->management === 'admin'), // ✅ Only admin can see
 
@@ -453,6 +464,7 @@ class OrderResource extends Resource
                             'returned_and_cost_paid' => 'Returned and cost paid',
                             'returned_to_warehouse' => 'Returned to Warehouse',
                             'returned_to_shipper' => 'Returned to Shipper',
+                            'lost' => 'Lost',
                             default => ucfirst(str_replace('_', ' ', $state)),
                         };
                     })
@@ -470,6 +482,7 @@ class OrderResource extends Resource
                             'returned_and_cost_paid' => 'seven',
                             'returned_to_warehouse' => 'fifth', //
                             'returned_to_shipper' => 'fourth', // Black
+                            'lost' => 'danger',
                             default => 'secondary',
                         };
                     }),
@@ -586,6 +599,7 @@ class OrderResource extends Resource
                         'returned_and_cost_paid' => 'Returned and cost paid',
                         'returned_to_warehouse' => 'Returned to Warehouse',
                         'returned_to_shipper' => 'Returned to Shipper',
+                        'lost' => 'Lost',
                     ])
                     ->searchable()
                     ->multiple(),
@@ -718,6 +732,7 @@ class OrderResource extends Resource
                                         'returned_and_cost_paid' => 'Returned and cost paid',
                                         'returned_to_warehouse' => 'Returned to Warehouse',
                                         'returned_to_shipper' => 'Returned to Shipper',
+                                        'lost' => 'Lost',
                                     ])
                                     ->required(),
                             ])
@@ -799,27 +814,101 @@ class OrderResource extends Resource
                                 'orders_import_demo.xlsx'
                             );
                         }),
-
                     Tables\Actions\BulkAction::make('print_waybills')
                         ->label('Print Waybills (A4)')
                         ->icon('heroicon-o-printer')
                         ->color('primary')
                         ->requiresConfirmation()
-                        ->action(function (\Illuminate\Support\Collection $records) {
+                        ->form(function (\Illuminate\Support\Collection $records) {
+
+                            $printedBeforeCount = $records
+                                ->where('is_printed', true)
+                                ->count();
+
+                            $neverPrintedCount = $records
+                                ->where('is_printed', false)
+                                ->count();
+
+                            $totalCount = $records->count();
+
+                            return [
+                                Forms\Components\Placeholder::make('total_selected')
+                                    ->label('Total Selected Waybills')
+                                    ->content($totalCount),
+
+                                Forms\Components\Placeholder::make('printed_before')
+                                    ->label('Printed Before')
+                                    ->content($printedBeforeCount),
+
+                                Forms\Components\Placeholder::make('never_printed')
+                                    ->label('Never Printed')
+                                    ->content($neverPrintedCount),
+
+                                Forms\Components\Toggle::make('skip_printed')
+                                    ->label('Skip Previously Printed Waybills')
+                                    ->helperText(
+                                        $printedBeforeCount > 0
+                                            ? "There are {$printedBeforeCount} waybills that were printed before."
+                                            : 'No previously printed waybills selected.'
+                                    )
+                                    ->default(false)
+                                    ->disabled($printedBeforeCount === 0),
+                            ];
+                        })
+                        ->action(function (
+                            \Illuminate\Support\Collection $records,
+                            array $data
+                        ) {
+
+                            /*
+                             * If Skip Previously Printed is enabled,
+                             * remove all orders that were already printed.
+                             */
+                            if ($data['skip_printed'] ?? false) {
+                                $records = $records
+                                    ->where('is_printed', false)
+                                    ->values();
+                            }
+
+                            /*
+                             * Nothing left to print
+                             */
+                            if ($records->isEmpty()) {
+                                Notification::make()
+                                    ->title('Nothing to Print')
+                                    ->warning()
+                                    ->body('All selected waybills were already printed.')
+                                    ->send();
+
+                                return;
+                            }
+
                             $Arabic = new Arabic;
 
                             $orders = $records->map(function ($order) use ($Arabic) {
+
                                 if (! empty($order->address_ar)) {
-                                    $order->address_ar = $Arabic->utf8Glyphs($order->address_ar);
+                                    $order->address_ar = $Arabic->utf8Glyphs(
+                                        $order->address_ar
+                                    );
                                 }
+
                                 if (! empty($order->city_ar)) {
-                                    $order->city_ar = $Arabic->utf8Glyphs($order->city_ar);
+                                    $order->city_ar = $Arabic->utf8Glyphs(
+                                        $order->city_ar
+                                    );
                                 }
+
                                 if (! empty($order->area_ar)) {
-                                    $order->area_ar = $Arabic->utf8Glyphs($order->area_ar);
+                                    $order->area_ar = $Arabic->utf8Glyphs(
+                                        $order->area_ar
+                                    );
                                 }
+
                                 if (! empty($order->receiver_name)) {
-                                    $order->receiver_name = $Arabic->utf8Glyphs($order->receiver_name);
+                                    $order->receiver_name = $Arabic->utf8Glyphs(
+                                        $order->receiver_name
+                                    );
                                 }
 
                                 return $order;
@@ -837,9 +926,22 @@ class OrderResource extends Resource
                                     'dpi' => 150,
                                 ]);
 
+                            /*
+                             * Mark ONLY the orders actually included in the PDF
+                             * as printed.
+                             */
+                            $records->each(function ($order) {
+                                $order->update([
+                                    'is_printed' => true,
+                                ]);
+                            });
+
                             $fileName = 'waybills_'.now()->format('Y_m_d_His').'.pdf';
 
-                            return response()->streamDownload(fn () => print ($pdf->output()), $fileName);
+                            return response()->streamDownload(
+                                fn () => print ($pdf->output()),
+                                $fileName
+                            );
                         }),
 
                     Tables\Actions\BulkAction::make('print_waybills_x')
@@ -847,21 +949,96 @@ class OrderResource extends Resource
                         ->icon('heroicon-o-document-duplicate')
                         ->color('primary')
                         ->requiresConfirmation()
-                        ->action(function (\Illuminate\Support\Collection $records) {
+                        ->form(function (\Illuminate\Support\Collection $records) {
+
+                            $printedBeforeCount = $records
+                                ->where('is_printed', true)
+                                ->count();
+
+                            $neverPrintedCount = $records
+                                ->where('is_printed', false)
+                                ->count();
+
+                            $totalCount = $records->count();
+
+                            return [
+                                Forms\Components\Placeholder::make('total_selected')
+                                    ->label('Total Selected Waybills')
+                                    ->content($totalCount),
+
+                                Forms\Components\Placeholder::make('printed_before')
+                                    ->label('Printed Before')
+                                    ->content($printedBeforeCount),
+
+                                Forms\Components\Placeholder::make('never_printed')
+                                    ->label('Never Printed')
+                                    ->content($neverPrintedCount),
+
+                                Forms\Components\Toggle::make('skip_printed')
+                                    ->label('Skip Previously Printed Waybills')
+                                    ->helperText(
+                                        $printedBeforeCount > 0
+                                            ? "There are {$printedBeforeCount} waybills that were printed before."
+                                            : 'No previously printed waybills selected.'
+                                    )
+                                    ->default(false)
+                                    ->disabled($printedBeforeCount === 0),
+                            ];
+                        })
+                        ->action(function (
+                            \Illuminate\Support\Collection $records,
+                            array $data
+                        ) {
+
+                            /*
+                             * If Skip Previously Printed is enabled,
+                             * remove all orders that were already printed.
+                             */
+                            if ($data['skip_printed'] ?? false) {
+                                $records = $records
+                                    ->where('is_printed', false)
+                                    ->values();
+                            }
+
+                            /*
+                             * Nothing left to print
+                             */
+                            if ($records->isEmpty()) {
+                                Notification::make()
+                                    ->title('Nothing to Print')
+                                    ->warning()
+                                    ->body('All selected waybills were already printed.')
+                                    ->send();
+
+                                return;
+                            }
+
                             $Arabic = new Arabic;
 
                             $orders = $records->map(function ($order) use ($Arabic) {
+
                                 if (! empty($order->address_ar)) {
-                                    $order->address_ar = $Arabic->utf8Glyphs($order->address_ar);
+                                    $order->address_ar = $Arabic->utf8Glyphs(
+                                        $order->address_ar
+                                    );
                                 }
+
                                 if (! empty($order->city_ar)) {
-                                    $order->city_ar = $Arabic->utf8Glyphs($order->city_ar);
+                                    $order->city_ar = $Arabic->utf8Glyphs(
+                                        $order->city_ar
+                                    );
                                 }
+
                                 if (! empty($order->area_ar)) {
-                                    $order->area_ar = $Arabic->utf8Glyphs($order->area_ar);
+                                    $order->area_ar = $Arabic->utf8Glyphs(
+                                        $order->area_ar
+                                    );
                                 }
+
                                 if (! empty($order->receiver_name)) {
-                                    $order->receiver_name = $Arabic->utf8Glyphs($order->receiver_name);
+                                    $order->receiver_name = $Arabic->utf8Glyphs(
+                                        $order->receiver_name
+                                    );
                                 }
 
                                 return $order;
@@ -871,7 +1048,7 @@ class OrderResource extends Resource
                                 'orders' => $orders,
                                 'language' => 'ar',
                             ])
-                                ->setPaper([0, 0, 226.77, 300]) // 👈 REQUIRED FOR X PRINTER
+                                ->setPaper([0, 0, 226.77, 300])
                                 ->setOptions([
                                     'isHtml5ParserEnabled' => true,
                                     'isRemoteEnabled' => true,
@@ -879,6 +1056,16 @@ class OrderResource extends Resource
                                     'isFontSubsettingEnabled' => true,
                                     'dpi' => 150,
                                 ]);
+
+                            /*
+                             * Mark ONLY the orders actually included in the PDF
+                             * as printed.
+                             */
+                            $records->each(function ($order) {
+                                $order->update([
+                                    'is_printed' => true,
+                                ]);
+                            });
 
                             $fileName = 'waybills_x_'.now()->format('Y_m_d_His').'.pdf';
 
