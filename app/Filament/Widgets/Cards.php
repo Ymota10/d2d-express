@@ -15,35 +15,112 @@ class Cards extends BaseWidget
     {
         $user = auth()->user();
 
-        // Base order query
+        /*
+         * ============================================================
+         * BASE ORDER QUERY
+         * ============================================================
+         */
+
         $orderQuery = Order::query();
 
-        // If not admin → show only orders that belong to this user
+        // If not admin → show only this user's orders
         if (! $user?->isAdmin()) {
             $orderQuery->where('users_id', $user->id);
         }
 
-        // Order status counts (based on filtered query)
-        $pickupRequest = (clone $orderQuery)->where('status', 'pickup_request')->count();
-        $warehouseReceived = (clone $orderQuery)->where('status', 'warehouse_received')->count();
-        $outForDelivery = (clone $orderQuery)->where('status', 'out_for_delivery')->count();
+        /*
+         * ============================================================
+         * TODAY'S ORDERS
+         * ============================================================
+         *
+         * We use updated_at because the order's status changes during
+         * its lifecycle.
+         *
+         * This means the cards show orders whose current status was
+         * updated today, instead of the lifetime total.
+         */
 
-        // ✅ Combine time_scheduled + returned_to_warehouse
-        $inProgress = (clone $orderQuery)
-            ->whereIn('status', ['time_scheduled', 'returned_to_warehouse', 'failed_attempt'])
+        $orderQuery->whereDate('updated_at', today());
+
+        /*
+         * ============================================================
+         * ORDER STATUS COUNTS
+         * ============================================================
+         */
+
+        $pickupRequest = (clone $orderQuery)
+            ->where('status', 'pickup_request')
             ->count();
+
+        $warehouseReceived = (clone $orderQuery)
+            ->where('status', 'warehouse_received')
+            ->count();
+
+        $outForDelivery = (clone $orderQuery)
+            ->where('status', 'out_for_delivery')
+            ->count();
+
+        /*
+         * In Progress:
+         *
+         * time_scheduled
+         * returned_to_warehouse
+         * failed_attempt
+         */
+
+        $inProgress = (clone $orderQuery)
+            ->whereIn('status', [
+                'time_scheduled',
+                'returned_to_warehouse',
+                'failed_attempt',
+            ])
+            ->count();
+
+        /*
+         * Success Delivery:
+         *
+         * success_delivery
+         * partial_return
+         */
 
         $successDelivery = (clone $orderQuery)
-            ->whereIn('status', ['success_delivery', 'partial_return'])
-            ->count();
-        $undelivered = (clone $orderQuery)
-            ->whereIn('status', ['undelivered', 'returned_and_cost_paid'])
+            ->whereIn('status', [
+                'success_delivery',
+                'partial_return',
+            ])
             ->count();
 
+        /*
+         * Undelivered:
+         *
+         * undelivered
+         * returned_and_cost_paid
+         */
+
+        $undelivered = (clone $orderQuery)
+            ->whereIn('status', [
+                'undelivered',
+                'returned_and_cost_paid',
+            ])
+            ->count();
+
+        /*
+         * ============================================================
+         * RETURN CARDS
+         * ============================================================
+         */
+
         return array_filter([
-            // ✅ Admin-only stats
+
+            // ========================================================
+            // ADMIN ONLY
+            // ========================================================
+
             $user?->isAdmin()
-                ? Stat::make('Total Couriers', User::where('management', 'courier')->count())
+                ? Stat::make(
+                    'Total Couriers',
+                    User::where('management', 'courier')->count()
+                )
                     ->description('5% increase')
                     ->descriptionIcon('heroicon-m-arrow-trending-up')
                     ->color('success')
@@ -52,7 +129,10 @@ class Cards extends BaseWidget
                 : null,
 
             $user?->isAdmin()
-                ? Stat::make('Total Cities', City::count())
+                ? Stat::make(
+                    'Total Cities',
+                    City::count()
+                )
                     ->description('3% decrease')
                     ->descriptionIcon('heroicon-m-arrow-trending-down')
                     ->color('danger')
@@ -61,7 +141,10 @@ class Cards extends BaseWidget
                 : null,
 
             $user?->isAdmin()
-                ? Stat::make('Total Areas', Area::count())
+                ? Stat::make(
+                    'Total Areas',
+                    Area::count()
+                )
                     ->description('7% increase')
                     ->descriptionIcon('heroicon-m-arrow-trending-up')
                     ->color('success')
@@ -69,37 +152,75 @@ class Cards extends BaseWidget
                     ->icon('fluentui-globe-surface-20-o')
                 : null,
 
-            // ✅ Order status cards (filtered per user)
-            Stat::make('Pickup Requests', $pickupRequest)
+            // ========================================================
+            // TODAY'S ORDER STATUS CARDS
+            // ========================================================
+
+            Stat::make(
+                'Pickup Requests',
+                $pickupRequest
+            )
+                // ->description('Updated today')
                 ->icon('heroicon-o-hand-raised')
                 ->color('warning')
-                ->extraAttributes(['class' => 'bg-blue-100 shadow-md rounded-lg p-4']),
+                ->extraAttributes([
+                    'class' => 'bg-blue-100 shadow-md rounded-lg p-4',
+                ]),
 
-            Stat::make('Warehouse Received', $warehouseReceived)
+            Stat::make(
+                'Warehouse Received',
+                $warehouseReceived
+            )
+                // ->description('Updated today')
                 ->icon('heroicon-o-home-modern')
                 ->color('info')
-                ->extraAttributes(['class' => 'bg-indigo-100 shadow-md rounded-lg p-4']),
+                ->extraAttributes([
+                    'class' => 'bg-indigo-100 shadow-md rounded-lg p-4',
+                ]),
 
-            Stat::make('Out For Delivery', $outForDelivery)
+            Stat::make(
+                'Out For Delivery',
+                $outForDelivery
+            )
+                // ->description('Updated today')
                 ->icon('heroicon-o-truck')
                 ->color('success')
-                ->extraAttributes(['class' => 'bg-green-100 shadow-md rounded-lg p-4']),
+                ->extraAttributes([
+                    'class' => 'bg-green-100 shadow-md rounded-lg p-4',
+                ]),
 
-            // ✅ Combined “In Progress” card
-            Stat::make('In Progress', $inProgress)
+            Stat::make(
+                'In Progress',
+                $inProgress
+            )
+                // ->description('Updated today')
                 ->icon('heroicon-m-chevron-double-up')
                 ->color('gray')
-                ->extraAttributes(['class' => 'bg-purple-100 shadow-md rounded-lg p-4']),
+                ->extraAttributes([
+                    'class' => 'bg-purple-100 shadow-md rounded-lg p-4',
+                ]),
 
-            Stat::make('Success Delivery', $successDelivery)
+            Stat::make(
+                'Success Delivery',
+                $successDelivery
+            )
+                // ->description('Updated today')
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
-                ->extraAttributes(['class' => 'bg-green-200 shadow-md rounded-lg p-4']),
+                ->extraAttributes([
+                    'class' => 'bg-green-200 shadow-md rounded-lg p-4',
+                ]),
 
-            Stat::make('Undelivered', $undelivered)
+            Stat::make(
+                'Undelivered',
+                $undelivered
+            )
+                // ->description('Updated today')
                 ->icon('heroicon-o-x-circle')
                 ->color('danger')
-                ->extraAttributes(['class' => 'bg-red-100 shadow-md rounded-lg p-4']),
+                ->extraAttributes([
+                    'class' => 'bg-red-100 shadow-md rounded-lg p-4',
+                ]),
         ]);
     }
 }
