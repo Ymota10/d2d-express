@@ -11,12 +11,14 @@ use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -78,6 +80,17 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(asset('images/d2d_MAIN_LOGO-removebg-preview.png'))
             ->brandLogoHeight('150px')
             ->favicon('images/d2d MAIN LOGO.jpg')
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                fn (): string => new HtmlString('
+                    <style>
+                        .cash-collected-stat .fi-wi-stats-overview-stat-value {
+                            font-size: 1.4rem !important;
+                            font-weight: 500 !important;
+                        }
+                    </style>
+                ')
+            )
             ->sidebarCollapsibleOnDesktop()
 
             ->navigationGroups([

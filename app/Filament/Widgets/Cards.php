@@ -11,8 +11,16 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class Cards extends BaseWidget
 {
+    // protected int|string|array $columnSpan = 'full';
+
+    protected function getColumns(): int
+    {
+        return 4;
+    }
+
     protected function getStats(): array
     {
+
         $user = auth()->user();
 
         /*
@@ -60,49 +68,34 @@ class Cards extends BaseWidget
             ->where('status', 'out_for_delivery')
             ->count();
 
-        /*
-         * In Progress:
-         *
-         * time_scheduled
-         * returned_to_warehouse
-         * failed_attempt
-         */
-
-        $inProgress = (clone $orderQuery)
-            ->whereIn('status', [
-                'time_scheduled',
-                'returned_to_warehouse',
-                'failed_attempt',
-            ])
+        $timeScheduled = (clone $orderQuery)
+            ->where('status', 'time_scheduled')
             ->count();
 
-        /*
-         * Success Delivery:
-         *
-         * success_delivery
-         * partial_return
-         */
+        $returnedToWarehouse = (clone $orderQuery)
+            ->where('status', 'returned_to_warehouse')
+            ->count();
+
+        $undelivered = (clone $orderQuery)
+            ->where('status', 'undelivered')
+            ->count();
 
         $successDelivery = (clone $orderQuery)
+            ->where('status', 'success_delivery')
+            ->count();
+
+        $collectedCashSales = Order::query()
+            ->where('is_collected', 0)
             ->whereIn('status', [
                 'success_delivery',
                 'partial_return',
-            ])
-            ->count();
+            ]);
 
-        /*
-         * Undelivered:
-         *
-         * undelivered
-         * returned_and_cost_paid
-         */
+        if (! $user?->isAdmin()) {
+            $collectedCashSales->where('users_id', $user->id);
+        }
 
-        $undelivered = (clone $orderQuery)
-            ->whereIn('status', [
-                'undelivered',
-                'returned_and_cost_paid',
-            ])
-            ->count();
+        $collectedCashSales = $collectedCashSales->sum('cod_amount');
 
         /*
          * ============================================================
@@ -116,41 +109,41 @@ class Cards extends BaseWidget
             // ADMIN ONLY
             // ========================================================
 
-            $user?->isAdmin()
-                ? Stat::make(
-                    'Total Couriers',
-                    User::where('management', 'courier')->count()
-                )
-                    ->description('5% increase')
-                    ->descriptionIcon('heroicon-m-arrow-trending-up')
-                    ->color('success')
-                    ->chart([37, 30, 32, 35, 34, 40, 42])
-                    ->icon('healthicons-o-truck-driver')
-                : null,
+            // $user?->isAdmin()
+            //     ? Stat::make(
+            //         'Total Couriers',
+            //         User::where('management', 'courier')->count()
+            //     )
+            //         ->description('5% increase')
+            //         ->descriptionIcon('heroicon-m-arrow-trending-up')
+            //         ->color('success')
+            //         ->chart([37, 30, 32, 35, 34, 40, 42])
+            //         ->icon('healthicons-o-truck-driver')
+            //     : null,
 
-            $user?->isAdmin()
-                ? Stat::make(
-                    'Total Cities',
-                    City::count()
-                )
-                    ->description('3% decrease')
-                    ->descriptionIcon('heroicon-m-arrow-trending-down')
-                    ->color('danger')
-                    ->chart([37, 30, 32, 35, 34, 40, 42])
-                    ->icon('fluentui-globe-location-24-o')
-                : null,
+            // $user?->isAdmin()
+            //     ? Stat::make(
+            //         'Total Cities',
+            //         City::count()
+            //     )
+            //         ->description('3% decrease')
+            //         ->descriptionIcon('heroicon-m-arrow-trending-down')
+            //         ->color('danger')
+            //         ->chart([37, 30, 32, 35, 34, 40, 42])
+            //         ->icon('fluentui-globe-location-24-o')
+            //     : null,
 
-            $user?->isAdmin()
-                ? Stat::make(
-                    'Total Areas',
-                    Area::count()
-                )
-                    ->description('7% increase')
-                    ->descriptionIcon('heroicon-m-arrow-trending-up')
-                    ->color('success')
-                    ->chart([37, 30, 32, 35, 34, 40, 42])
-                    ->icon('fluentui-globe-surface-20-o')
-                : null,
+            // $user?->isAdmin()
+            //     ? Stat::make(
+            //         'Total Areas',
+            //         Area::count()
+            //     )
+            //         ->description('7% increase')
+            //         ->descriptionIcon('heroicon-m-arrow-trending-up')
+            //         ->color('success')
+            //         ->chart([37, 30, 32, 35, 34, 40, 42])
+            //         ->icon('fluentui-globe-surface-20-o')
+            //     : null,
 
             // ========================================================
             // TODAY'S ORDER STATUS CARDS
@@ -160,7 +153,6 @@ class Cards extends BaseWidget
                 'Pickup Requests',
                 $pickupRequest
             )
-                // ->description('Updated today')
                 ->icon('heroicon-o-hand-raised')
                 ->color('warning')
                 ->extraAttributes([
@@ -171,7 +163,6 @@ class Cards extends BaseWidget
                 'Warehouse Received',
                 $warehouseReceived
             )
-                // ->description('Updated today')
                 ->icon('heroicon-o-home-modern')
                 ->color('info')
                 ->extraAttributes([
@@ -182,7 +173,6 @@ class Cards extends BaseWidget
                 'Out For Delivery',
                 $outForDelivery
             )
-                // ->description('Updated today')
                 ->icon('heroicon-o-truck')
                 ->color('success')
                 ->extraAttributes([
@@ -190,21 +180,39 @@ class Cards extends BaseWidget
                 ]),
 
             Stat::make(
-                'In Progress',
-                $inProgress
+                'Time Scheduled',
+                $timeScheduled
             )
-                // ->description('Updated today')
-                ->icon('heroicon-m-chevron-double-up')
+                ->icon('heroicon-o-clock')
+                ->color('warning')
+                ->extraAttributes([
+                    'class' => 'bg-yellow-100 shadow-md rounded-lg p-4',
+                ]),
+
+            Stat::make(
+                'Returned to Warehouse',
+                $returnedToWarehouse
+            )
+                ->icon('heroicon-o-arrow-uturn-left')
                 ->color('gray')
                 ->extraAttributes([
                     'class' => 'bg-purple-100 shadow-md rounded-lg p-4',
                 ]),
 
             Stat::make(
+                'Undelivered',
+                $undelivered
+            )
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
+                ->extraAttributes([
+                    'class' => 'bg-red-100 shadow-md rounded-lg p-4',
+                ]),
+
+            Stat::make(
                 'Success Delivery',
                 $successDelivery
             )
-                // ->description('Updated today')
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->extraAttributes([
@@ -212,14 +220,13 @@ class Cards extends BaseWidget
                 ]),
 
             Stat::make(
-                'Undelivered',
-                $undelivered
+                'Cash Collected (Sales)',
+                number_format($collectedCashSales, 2).' EGP'
             )
-                // ->description('Updated today')
-                ->icon('heroicon-o-x-circle')
-                ->color('danger')
+                ->icon('heroicon-o-banknotes')
+                ->color('success')
                 ->extraAttributes([
-                    'class' => 'bg-red-100 shadow-md rounded-lg p-4',
+                    'class' => 'bg-emerald-100 shadow-md rounded-lg p-4 cash-collected-stat',
                 ]),
         ]);
     }
