@@ -443,7 +443,7 @@ class OrderResource extends Resource
                 // Tables\Columns\TextColumn::make('receiver_address')->sortable(),
                 Tables\Columns\TextColumn::make('receiver_name')->label('Receiver Name')->searchable(),
                 Tables\Columns\TextColumn::make('receiver_mobile_1')->label('Receiver Mobile')->searchable(),
-                Tables\Columns\TextColumn::make('area.name')->label('Area')->sortable(),
+                Tables\Columns\TextColumn::make('city.name')->label('Area')->sortable(),
                 // Tables\Columns\TextColumn::make('item_name'),
                 // Tables\Columns\TextColumn::make('size'),
                 Tables\Columns\TextColumn::make('cod_amount')->label('COD Amount')->numeric()->sortable(),

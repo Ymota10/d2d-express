@@ -11,11 +11,17 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class Cards extends BaseWidget
 {
-    // protected int|string|array $columnSpan = 'full';
-
     protected function getColumns(): int
     {
         return 4;
+    }
+
+    protected function getHeading(): ?string
+    {
+        $user = auth()->user();
+
+        return 'Ahlan, '.($user?->name ?? 'User').' 👋 
+        — Today\'s Overview';
     }
 
     protected function getStats(): array
@@ -85,7 +91,7 @@ class Cards extends BaseWidget
             ->count();
 
         $collectedCashSales = Order::query()
-            ->where('is_collected', 0)
+            ->whereDate('updated_at', today())
             ->whereIn('status', [
                 'success_delivery',
                 'partial_return',
@@ -220,7 +226,7 @@ class Cards extends BaseWidget
                 ]),
 
             Stat::make(
-                'Cash Collected (Sales)',
+                'Cash Collected',
                 number_format($collectedCashSales, 2).' EGP'
             )
                 ->icon('heroicon-o-banknotes')
