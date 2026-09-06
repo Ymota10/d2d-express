@@ -2,16 +2,19 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\Cards;
 use Filament\Pages\Page;
 use Filament\Support\Facades\FilamentIcon;
 use Illuminate\Contracts\Support\Htmlable;
 
-class Dashboard extends Page
+class Analytics extends Page
 {
-    protected static string $routePath = '/';
+    protected static string $routePath = 'analytics';
 
-    protected static ?int $navigationSort = -2;
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $navigationLabel = 'Analytics';
+
+    protected static ?string $title = 'Analytics';
 
     protected static string $view = 'filament-panels::pages.dashboard';
 
@@ -22,16 +25,14 @@ class Dashboard extends Page
 
     public static function getNavigationLabel(): string
     {
-        return static::$navigationLabel ??
-            static::$title ??
-            __('filament-panels::pages/dashboard.title');
+        return static::$navigationLabel ?? static::$title ?? 'Analytics';
     }
 
     public static function getNavigationIcon(): string|Htmlable|null
     {
         return static::$navigationIcon
             ?? FilamentIcon::resolve('panels::pages.dashboard.navigation-item')
-            ?? 'heroicon-o-presentation-chart-line';
+            ?? 'heroicon-o-chart-bar';
     }
 
     public static function getRoutePath(): string
@@ -42,16 +43,13 @@ class Dashboard extends Page
     public function getWidgets(): array
     {
         return [
-            Cards::class,
-            // \App\Filament\Widgets\MonthlyOrdersChart::class,
-            // \App\Filament\Widgets\MonthlyShippersChart::class,
-            // \App\Filament\Widgets\UnsuccessfulReasonsWidget::class,
-            // \App\Filament\Widgets\DeliveryRateChart::class,
-            // \App\Filament\Widgets\FinanceSummaryChart::class,
-            // \App\Filament\Widgets\AverageDeliveryTimeChart::class,
-            // \App\Filament\Widgets\CitySuccessRateWidget::class,
-            \App\Filament\Widgets\TodaysOrderFlow::class,
-            \App\Filament\Widgets\TodaysDeliveryPerformance::class,
+            \App\Filament\Widgets\MonthlyOrdersChart::class,
+            \App\Filament\Widgets\MonthlyShippersChart::class,
+            \App\Filament\Widgets\UnsuccessfulReasonsWidget::class,
+            \App\Filament\Widgets\DeliveryRateChart::class,
+            \App\Filament\Widgets\FinanceSummaryChart::class,
+            \App\Filament\Widgets\AverageDeliveryTimeChart::class,
+            \App\Filament\Widgets\CitySuccessRateWidget::class,
         ];
     }
 
@@ -67,6 +65,6 @@ class Dashboard extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return static::$title ?? __('filament-panels::pages/dashboard.title');
+        return static::$title ?? 'Analytics';
     }
 }
