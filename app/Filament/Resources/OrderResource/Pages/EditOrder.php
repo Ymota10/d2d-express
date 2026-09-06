@@ -13,8 +13,8 @@ class EditOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make()
-                ->visible(fn () => auth()->user()?->management !== 'track_express'),
+            // Actions\DeleteAction::make()
+            //     ->visible(fn () => auth()->user()?->management !== 'track_express'),
         ];
     }
 
