@@ -68,7 +68,7 @@ class TodaysDeliveryPerformance extends DoughnutChartWidget
                     'label' => 'Orders',
                     'data' => $data,
                     'backgroundColor' => [
-                        '#02447d',
+                        '#2563EB', // Lynk Blue
                         '#1271FF',
                         '#29AB87',
                         '#50C878',

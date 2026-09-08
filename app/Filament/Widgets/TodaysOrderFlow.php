@@ -51,11 +51,15 @@ class TodaysOrderFlow extends LineChartWidget
                 [
                     'label' => 'Orders',
                     'data' => $data,
-                    'borderColor' => '#02447d',
-                    'backgroundColor' => 'rgba(3, 105, 193, 0.2)',
+
+                    // Lynk primary blue
+                    'borderColor' => '#2563EB',
+                    'backgroundColor' => 'rgba(37, 99, 235, 0.2)',
                     'fill' => true,
+
                     'tension' => 0.4,
-                    'pointBackgroundColor' => '#02447d',
+
+                    'pointBackgroundColor' => '#2563EB',
                     'pointRadius' => 4,
                     'pointHoverRadius' => 6,
                 ],
