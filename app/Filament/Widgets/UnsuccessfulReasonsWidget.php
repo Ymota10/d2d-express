@@ -22,16 +22,14 @@ class UnsuccessfulReasonsWidget extends BaseWidget
     {
         $user = auth()->user();
 
-        // ✅ Start query
+        // ✅ Start query (both unsuccessful statuses)
         $ordersQuery = Order::query()
-            ->where('status', 'undelivered');
+            ->whereIn('status', ['undelivered', 'returned_and_cost_paid']);
 
-        // ✅ Non-admin users only see their own orders
         if (! $user->isAdmin()) {
             $ordersQuery->where('users_id', $user->id);
         }
 
-        // ✅ Base grouped query
         $query = $ordersQuery
             ->select([
                 DB::raw('COALESCE(undelivered_reason, "Unknown") as reason'),
@@ -55,8 +53,11 @@ class UnsuccessfulReasonsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('percentage')
                     ->label('Percentage')
                     ->getStateUsing(function ($record) use ($user) {
-                        // ✅ Reapply visibility logic for percentage
-                        $totalQuery = Order::where('status', 'undelivered');
+
+                        $totalQuery = Order::whereIn('status', [
+                            'undelivered',
+                            'returned_and_cost_paid',
+                        ]);
 
                         if (! $user->isAdmin()) {
                             $totalQuery->where('users_id', $user->id);
@@ -71,8 +72,8 @@ class UnsuccessfulReasonsWidget extends BaseWidget
                     ->formatStateUsing(function ($state) {
                         return new HtmlString('
                             <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="h-3 rounded-full" 
-                                    style="width: '.$state.'%; background-color: #02447d;"></div>
+                                <div class="h-3 rounded-full"
+                                    style="width: '.$state.'%; background-color: #2563ed;"></div>
                             </div>
                             <span class="text-xs ml-1">'.$state.'%</span>
                         ');

@@ -10,7 +10,7 @@ class MonthlyShippersChart extends LineChartWidget
 {
     protected static ?string $heading = 'Total Shippers';
 
-    // ✅ Only allow admins to view this widget
+    // Only allow admins to view this widget
     public static function canView(): bool
     {
         $user = auth()->user();
@@ -32,7 +32,11 @@ class MonthlyShippersChart extends LineChartWidget
 
         foreach (range(1, 12) as $month) {
             $cumulative += $shippers[$month] ?? 0;
-            $labels[] = Carbon::create()->month($month)->format('M');
+
+            $labels[] = Carbon::create()
+                ->month($month)
+                ->format('M');
+
             $data[] = $cumulative;
         }
 
@@ -41,12 +45,18 @@ class MonthlyShippersChart extends LineChartWidget
                 [
                     'label' => 'Shippers',
                     'data' => $data,
-                    'borderColor' => '#02447d', // primary blue
-                    'backgroundColor' => 'rgba(3, 105, 193, 0.2)', // lighter blue fill
+
+                    // New primary blue
+                    'borderColor' => '#2563EB',
+
+                    // Lighter version of primary blue
+                    'backgroundColor' => 'rgba(37, 99, 235, 0.20)',
+
                     'fill' => true,
                     'tension' => 0.4,
                 ],
             ],
+
             'labels' => $labels,
         ];
     }
@@ -58,16 +68,21 @@ class MonthlyShippersChart extends LineChartWidget
                 'duration' => 1500,
                 'easing' => 'easeInOutQuart',
             ],
+
             'plugins' => [
                 'legend' => [
                     'display' => true,
                 ],
             ],
+
             'elements' => [
                 'line' => [
                     'borderWidth' => 2.5,
                     'borderJoinStyle' => 'round',
-                    'shadowColor' => 'rgba(2, 68, 125, 0.5)',
+
+                    // New primary blue shadow
+                    'shadowColor' => 'rgba(37, 99, 235, 0.5)',
+
                     'shadowBlur' => 30,
                 ],
             ],

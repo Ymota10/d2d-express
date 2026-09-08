@@ -341,7 +341,7 @@ class FinancialAnalysisResource extends Resource
                     Tables\Actions\BulkAction::make('collection')
                         ->label('Collection')
                         ->icon('heroicon-o-archive-box-arrow-down')
-                        ->color('success')
+                        ->color('money')
                         ->visible(
                             fn () => auth()->user()?->isAdmin()
                         )

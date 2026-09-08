@@ -764,7 +764,7 @@ class OrderResource extends Resource
 
                             return \Maatwebsite\Excel\Facades\Excel::download(
                                 new \App\Exports\OrdersExport($ids),
-                                'D2D_financial_analysis.xlsx'
+                                'lynk_export.xlsx'
                             );
                         }),
 
@@ -806,12 +806,12 @@ class OrderResource extends Resource
                     Tables\Actions\BulkAction::make('download_demo_excel')
                         ->label('Download Demo Excel')
                         ->icon('heroicon-o-document-arrow-down')
-                        ->color('info')
+                        ->color('money')
                         ->requiresConfirmation(false)
                         ->action(function () {
                             return \Maatwebsite\Excel\Facades\Excel::download(
                                 new \App\Exports\OrdersDemoExport,
-                                'orders_import_demo.xlsx'
+                                'lynk_orders_import_demo.xlsx'
                             );
                         }),
                     Tables\Actions\BulkAction::make('print_waybills')

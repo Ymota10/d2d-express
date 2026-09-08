@@ -50,8 +50,8 @@ class FlyersResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('image')
                     ->label('')
-                    ->getStateUsing(fn ($record) => asset('images/adobe.png')) // fixed path
-                    ->size(130),
+                    ->getStateUsing(fn ($record) => asset('images/lynk_flyers-removebg-preview.png')) // fixed path
+                    ->size(120),
 
                 Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('size'),

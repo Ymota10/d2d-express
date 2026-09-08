@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->colors([
-                'primary' => '#02447d',
+                'primary' => '#2563EB',
                 'secondary' => '#800080',
                 'tertiary' => '#000000',
                 'third' => '#90EE90',
@@ -46,6 +46,7 @@ class AdminPanelProvider extends PanelProvider
                 'neon' => '#0FFF50',
                 'orange' => '#29AB87',
                 'partialreturn' => '#FC6A03',
+                'money' => '#006400',
 
             ])
             ->discoverResources(
