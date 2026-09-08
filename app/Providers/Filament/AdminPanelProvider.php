@@ -77,9 +77,9 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\AverageDeliveryTimeChart::class,
                 \App\Filament\Widgets\CitySuccessRateWidget::class,
             ])
-            ->brandLogo(asset('images/d2d_MAIN_LOGO-removebg-preview.png'))
-            ->brandLogoHeight('150px')
-            ->favicon('images/d2d MAIN LOGO.jpg')
+            ->brandLogo(asset('images/lynk_normal_logo-removebg-preview.png'))
+            ->brandLogoHeight('130px')
+            ->favicon('images/lynk normal logo.jpeg')
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => new HtmlString('
