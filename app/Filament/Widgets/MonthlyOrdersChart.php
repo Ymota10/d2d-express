@@ -13,13 +13,13 @@ class MonthlyOrdersChart extends LineChartWidget
 
     public function getColumnSpan(): int|string|array
     {
-        return 1; // ✅ Each widget takes 1 column (since dashboard uses 2)
+        return 1;
     }
 
     protected function getExtraAttributes(): array
     {
         return [
-            'class' => 'h-80', // ✅ Consistent height across dashboard
+            'class' => 'h-80',
         ];
     }
 
@@ -28,7 +28,7 @@ class MonthlyOrdersChart extends LineChartWidget
         $query = Order::query()
             ->whereYear('created_at', now()->year);
 
-        // ✅ Shipper sees only his own orders
+        // Shipper sees only his own orders
         if (Auth::user()->management === 'shipper') {
             $query->where('users_id', Auth::id());
         }
@@ -51,15 +51,25 @@ class MonthlyOrdersChart extends LineChartWidget
                 [
                     'label' => 'Orders',
                     'data' => $data,
-                    'borderColor' => '#02447d', // primary blue
-                    'backgroundColor' => 'rgba(3, 105, 193, 0.2)', // lighter blue fill
+
+                    // New primary blue
+                    'borderColor' => '#2563EB',
+
+                    // Lighter version of the new primary blue
+                    'backgroundColor' => 'rgba(37, 99, 235, 0.20)',
+
                     'fill' => true,
+
                     'tension' => 0.4,
-                    'pointBackgroundColor' => '#02447d',
+
+                    // New primary blue
+                    'pointBackgroundColor' => '#2563EB',
+
                     'pointRadius' => 4,
                     'pointHoverRadius' => 6,
                 ],
             ],
+
             'labels' => $labels,
         ];
     }
@@ -68,19 +78,24 @@ class MonthlyOrdersChart extends LineChartWidget
     {
         return [
             'animation' => [
-                'duration' => 1500, // ms
-                'easing' => 'easeInOutQuart', // smooth easing
+                'duration' => 1500,
+                'easing' => 'easeInOutQuart',
             ],
+
             'plugins' => [
                 'legend' => [
                     'display' => true,
                 ],
             ],
+
             'elements' => [
                 'line' => [
                     'borderWidth' => 1.5,
                     'borderJoinStyle' => 'round',
-                    'shadowColor' => 'rgba(2, 68, 125, 0.5)',
+
+                    // New primary blue shadow
+                    'shadowColor' => 'rgba(37, 99, 235, 0.5)',
+
                     'shadowBlur' => 30,
                 ],
             ],
