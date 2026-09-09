@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\ShopifyWriteController;
 use App\Http\Controllers\Api\SyncOrdersController;
 use App\Http\Controllers\Api\TrackExpressWebhookController;
 use App\Http\Controllers\Api\UpdateShopifySettingsController;
-use App\Http\Controllers\Api\WooOrderWebhookController;
+// use App\Http\Controllers\Api\WooOrderWebhookController;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -52,10 +52,10 @@ Route::post('/webhooks/flextock/status', [FlextockWebhookController::class, 'sta
 // -----------------------------
 
 // Public webhook route for WooCommerce (no auth)
-Route::post(
-    '/webhooks/woocommerce/orders',
-    [WooOrderWebhookController::class, 'store']
-);
+// Route::post(
+//     '/webhooks/woocommerce/orders',
+//     [WooOrderWebhookController::class, 'store']
+// );
 // ->middleware('verify.woo'); // optional, enable after testing
 
 // NEWWWWWWWWWWW
