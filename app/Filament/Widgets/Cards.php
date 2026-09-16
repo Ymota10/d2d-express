@@ -87,7 +87,10 @@ class Cards extends BaseWidget
             ->count();
 
         $successDelivery = (clone $orderQuery)
-            ->where('status', 'success_delivery')
+            ->whereIn('status', [
+                'success_delivery',
+                'partial_return',
+            ])
             ->count();
 
         $collectedCashSales = Order::query()

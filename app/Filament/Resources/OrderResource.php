@@ -931,6 +931,9 @@ class OrderResource extends Resource
                              * as printed.
                              */
                             $records->each(function ($order) {
+                                // printing does not update updated_at:
+                                $order->timestamps = false;
+
                                 $order->update([
                                     'is_printed' => true,
                                 ]);
@@ -1062,6 +1065,9 @@ class OrderResource extends Resource
                              * as printed.
                              */
                             $records->each(function ($order) {
+                                // printing does not update updated_at:
+                                $order->timestamps = false;
+
                                 $order->update([
                                     'is_printed' => true,
                                 ]);
