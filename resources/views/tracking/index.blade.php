@@ -15,14 +15,14 @@
             theme: {
                 extend: {
                     colors: {
-                        ink: '#2563EB',
-                        ink2: '#1D4ED8',
-                        paper: '#FAFBFD',
-                        amber: '#0D1B3D',
+                        ink: '#3B82F6',
+                        ink2: '#2563EB',
+                        paper: '#F8FBFF',
+                        amber: '#60A5FA',
                         route: '#2E9E6D',
                         alert: '#D6483F',
-                        slate: '#5C7089',
-                        line: '#DCE6F2',
+                        slate: '#64748B',
+                        line: '#DDEBFA',
                     },
                     fontFamily: {
                         display: ['"Space Grotesk"', 'sans-serif'],
@@ -35,21 +35,21 @@
     </script>
 
     <style>
-        body { background: #FAFBFD; }
+        body { background: #F8FBFF; }
 
         /* ticket card + punched-hole divider, evokes a torn waybill stub */
         .ticket {
             position: relative;
             background: #FFFFFF;
-            border: 1px solid #DCE6F2;
+            border: 1px solid #DDEBFA;
             border-radius: 6px;
-            box-shadow: 0 1px 2px rgba(18,33,61,0.05), 0 12px 28px -16px rgba(18,33,61,0.25);
+            box-shadow: 0 1px 2px rgba(37,99,235,0.05), 0 12px 28px -16px rgba(37,99,235,0.18);
         }
 
         .perf-divider {
             position: relative;
             height: 0;
-            border-top: 2px dashed #DCE6F2;
+            border-top: 2px dashed #DDEBFA;
             margin-left: -1.5rem;
             margin-right: -1.5rem;
         }
@@ -61,8 +61,8 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: #FAFBFD;
-            border: 1px solid #DCE6F2;
+            background: #F8FBFF;
+            border: 1px solid #DDEBFA;
         }
         .perf-divider::before { left: -9px; }
         .perf-divider::after { right: -9px; }
@@ -72,7 +72,7 @@
             display: flex;
             align-items: stretch;
             height: 26px;
-            color: #2563EB;
+            color: #3B82F6;
             opacity: 0.85;
         }
         .barcode-strip span {
@@ -100,7 +100,7 @@
         .route-track {
             position: relative;
             height: 3px;
-            background: #DCE6F2;
+            background: #DDEBFA;
             border-radius: 999px;
         }
         .route-fill {
@@ -116,9 +116,9 @@
             font-family: 'IBM Plex Mono', monospace;
             font-size: 12px;
             font-weight: 600;
-            border: 2px solid #DCE6F2;
+            border: 2px solid #DDEBFA;
             background: #FFFFFF;
-            color: #5C7089;
+            color: #64748B;
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
         .route-marker {
@@ -136,10 +136,10 @@
             left: 0; top: 4px;
             width: 9px; height: 9px;
             border-radius: 50%;
-            background: #2563EB;
+            background: #3B82F6;
         }
         .tl-line {
-            border-left: 2px dotted #DCE6F2;
+            border-left: 2px dotted #DDEBFA;
         }
 
         @keyframes riseIn {
@@ -162,7 +162,7 @@
     {{-- MARK --}}
     <div class="flex items-center gap-2 mb-10">
         <div class="w-8 h-8 rounded-sm bg-ink flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D1B3D" stroke-width="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2">
                 <path d="M3 7l9-4 9 4-9 4-9-4z"/>
                 <path d="M3 7v10l9 4 9-4V7"/>
                 <path d="M12 11v10"/>
@@ -211,7 +211,7 @@
             <span id="errorText"></span>
         </p>
 
-        <p class="mt-4 text-xs text-slate">The tracking number is printed on the receipt your courier gave you at pickup.</p>
+        <p class="mt-4 text-xs text-slate">The tracking number is printed on the waybill per order package.</p>
     </div>
 
     {{-- RESULT --}}
@@ -262,11 +262,11 @@
             <div class="route-track">
                 <div id="progressBar" class="route-fill bg-route" style="width:0%"></div>
                 <div id="routeMarker" class="route-marker" style="left:0%">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="1.8">
                         <rect x="1" y="7" width="13" height="9" rx="1"/>
                         <path d="M14 10h4l3 3v3h-7z"/>
-                        <circle cx="6" cy="18" r="1.6" fill="#2563EB" stroke="none"/>
-                        <circle cx="17" cy="18" r="1.6" fill="#2563EB" stroke="none"/>
+                        <circle cx="6" cy="18" r="1.6" fill="#3B82F6" stroke="none"/>
+                        <circle cx="17" cy="18" r="1.6" fill="#3B82F6" stroke="none"/>
                     </svg>
                 </div>
             </div>
