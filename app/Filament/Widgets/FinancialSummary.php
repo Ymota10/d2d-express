@@ -200,14 +200,14 @@ class FinancialSummary extends BaseWidget
                 ->chart([20, 23, 26, 30, 35, 39, 33])
                 ->icon('heroicon-s-arrow-left-circle'),
 
-            Stat::make(
-                'OPEN PACKAGE FEES',
-                number_format($openPackageTotal, 2)
-            )
-                ->description('Additional 5 EGP per open package')
-                ->color('info')
-                ->chart([10, 12, 15, 18, 20, 22, 25])
-                ->icon('heroicon-o-gift'),
+            // Stat::make(
+            //     'OPEN PACKAGE FEES',
+            //     number_format($openPackageTotal, 2)
+            // )
+            //     ->description('Additional 5 EGP per open package')
+            //     ->color('info')
+            //     ->chart([10, 12, 15, 18, 20, 22, 25])
+            //     ->icon('heroicon-o-gift'),
 
             Stat::make(
                 'INSURANCE FEES',

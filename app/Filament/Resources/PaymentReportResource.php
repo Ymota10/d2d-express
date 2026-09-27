@@ -62,10 +62,10 @@ class PaymentReportResource extends Resource
                     ->money('EGP')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('total_open_package_fees')
-                    ->label('Open Package Fees')
-                    ->money('EGP')
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('total_open_package_fees')
+                //     ->label('Open Package Fees')
+                //     ->money('EGP')
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total_insurance_fees')
                     ->label('Insurance Fees')

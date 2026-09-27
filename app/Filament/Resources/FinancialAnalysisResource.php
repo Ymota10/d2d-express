@@ -211,10 +211,10 @@ class FinancialAnalysisResource extends Resource
                         'danger' => 'no',
                     ]),
 
-                Tables\Columns\TextColumn::make('open_package_fee')
-                    ->label('Open Package Fees')
-                    ->numeric()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('open_package_fee')
+                //     ->label('Open Package Fees')
+                //     ->numeric()
+                //     ->sortable(),
 
                 // Tables\Columns\TextColumn::make('receiver_mobile_2')
                 //     ->label('Receiver Mobile 2')
@@ -402,14 +402,14 @@ class FinancialAnalysisResource extends Resource
                             $totalInsurance =
                                 $records->sum('insurance_fee');
 
-                            $openPackageFees =
-                                $records->sum('open_package_fee');
+                            // $openPackageFees =
+                            //     $records->sum('open_package_fee');
 
                             $netValue =
                                 $totalCod
                                 - $totalShipping
-                                - $totalInsurance
-                                - $openPackageFees;
+                                - $totalInsurance;
+                            // - $openPackageFees;
 
                             $count = $records->count();
 
@@ -485,18 +485,18 @@ class FinancialAnalysisResource extends Resource
                                         ).' EGP'
                                     ),
 
-                                Forms\Components\Placeholder::make(
-                                    'total_open_package'
-                                )
-                                    ->label(
-                                        'Total Open Package Fees'
-                                    )
-                                    ->content(
-                                        number_format(
-                                            $openPackageFees,
-                                            2
-                                        ).' EGP'
-                                    ),
+                                // Forms\Components\Placeholder::make(
+                                //     'total_open_package'
+                                // ),
+                                // ->label(
+                                //     'Total Open Package Fees'
+                                // ),
+                                // ->content(
+                                //     number_format(
+                                //         $openPackageFees,
+                                //         2
+                                //     ).' EGP'
+                                // ),
 
                                 Forms\Components\Placeholder::make(
                                     'total_insurance'
@@ -562,8 +562,8 @@ class FinancialAnalysisResource extends Resource
                                     : $order->delivery_cost;
                             });
 
-                            $openPackageFees =
-                                $records->sum('open_package_fee');
+                            // $openPackageFees =
+                            //     $records->sum('open_package_fee');
 
                             $totalInsurance =
                                 $records->sum('insurance_fee');
@@ -591,7 +591,7 @@ class FinancialAnalysisResource extends Resource
                             $finalAmount =
                                 $totalCod
                                 - $totalShipping
-                                - $openPackageFees
+                                // - $openPackageFees
                                 - $totalInsurance
                                 - $extra;
 
@@ -612,7 +612,7 @@ class FinancialAnalysisResource extends Resource
 
                                 'total_delivery_cost' => $totalShipping,
 
-                                'total_open_package_fees' => $openPackageFees,
+                                // 'total_open_package_fees' => $openPackageFees,
 
                                 'total_insurance_fees' => $totalInsurance,
 

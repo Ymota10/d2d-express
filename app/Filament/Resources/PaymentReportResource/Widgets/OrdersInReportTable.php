@@ -132,10 +132,10 @@ class OrdersInReportTable extends BaseWidget
                         'danger' => 'no',
                     ]),
 
-                Tables\Columns\TextColumn::make('open_package_fee')
-                    ->label('Open Package Fees')
-                    ->numeric()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('open_package_fee')
+                //     ->label('Open Package Fees')
+                //     ->numeric()
+                //     ->sortable(),
 
                 Tables\Columns\TextColumn::make('insurancePackage.name')
                     ->label('Insurance')

@@ -106,14 +106,11 @@ class OrderResource extends Resource
                             return;
                         }
 
-                        // ✅ Set open package based on selected shipper
+                        // Set open package based on selected shipper
                         $set('open_package', $user->open_package ?? 'yes');
 
-                        // ✅ Set fee automatically
-                        $set(
-                            'open_package_fee',
-                            ($user->open_package ?? 'yes') === 'yes' ? 7 : 0
-                        );
+                        // Open package fee is currently disabled
+                        $set('open_package_fee', 0);
                     }),
 
                 // Area select
@@ -379,7 +376,7 @@ class OrderResource extends Resource
                                 $openPackage = User::find($userId)?->open_package ?? 'yes';
 
                                 $set('open_package', $openPackage);
-                                $set('open_package_fee', $openPackage === 'yes' ? 7 : 0);
+                                $set('open_package_fee', 0);
                             })
                             ->disabled()
                             ->dehydrated(true)
@@ -388,23 +385,10 @@ class OrderResource extends Resource
                         Forms\Components\TextInput::make('open_package_fee')
                             ->label('Open Package Fee')
                             ->numeric()
-                            ->default(function (callable $get) {
-
-                                $userId = $get('users_id') ?: auth()->id();
-
-                                $openPackage = User::find($userId)?->open_package ?? 'yes';
-
-                                return $openPackage === 'yes' ? 7 : 0;
-                            })
-                            ->dehydrateStateUsing(function ($state, callable $get) {
-
-                                $userId = $get('users_id') ?: auth()->id();
-
-                                $openPackage = User::find($userId)?->open_package ?? 'yes';
-
-                                return $openPackage === 'yes' ? 7 : 0;
-                            })
+                            ->default(0)
+                            ->dehydrateStateUsing(fn () => 0)
                             ->disabled()
+                            ->hidden()
                             ->dehydrated(true)
                             ->required(),
 
