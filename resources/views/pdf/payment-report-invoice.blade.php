@@ -150,11 +150,22 @@
             text-align: right;
         }
 
-        .status-delivered { color: #2E9E6D; font-weight: bold; }
-        .status-failed    { color: #D6483F; font-weight: bold; }
-        .status-progress  { color: #2563EB; font-weight: bold; }
+        .status-delivered {
+            color: #2E9E6D;
+            font-weight: bold;
+        }
 
-        /* ===== SUMMARY (no-report mode) ===== */
+        .status-failed {
+            color: #D6483F;
+            font-weight: bold;
+        }
+
+        .status-progress {
+            color: #2563EB;
+            font-weight: bold;
+        }
+
+        /* ===== SUMMARY (NO-REPORT MODE) ===== */
         table.summary {
             width: 56%;
             margin-left: auto;
@@ -194,62 +205,142 @@
 
 <body>
 
-    {{-- LETTERHEAD --}}
+    {{-- =========================================================
+         LETTERHEAD
+    ========================================================== --}}
     <div class="brand-bar">
         <table class="brand-table">
             <tr>
                 <td style="width: 60%;">
-                    <div class="brand-mark">LY<span>NK</span></div>
-                    <div class="brand-sub">Logistics &amp; Delivery</div>
+                    <div class="brand-mark">
+                        LY<span>NK</span>
+                    </div>
+
+                    <div class="brand-sub">
+                        Logistics &amp; Delivery
+                    </div>
                 </td>
+
                 <td class="doc-meta" style="width: 40%;">
-                    <div class="doc-title">Payment Report Invoice</div>
+                    <div class="doc-title">
+                        Payment Report Invoice
+                    </div>
 
                     @if($paymentReport)
-                        <p><strong>Report #</strong> {{ $paymentReport->id }}</p>
-                        <p><strong>Date:</strong> {{ optional($paymentReport->created_at)->format('Y-m-d H:i') }}</p>
+                        <p>
+                            <strong>Report #</strong>
+                            {{ $paymentReport->id }}
+                        </p>
+
+                        <p>
+                            <strong>Date:</strong>
+                            {{ optional($paymentReport->created_at)->format('Y-m-d H:i') }}
+                        </p>
                     @else
-                        <p><strong>Date:</strong> {{ now()->format('Y-m-d H:i') }}</p>
+                        <p>
+                            <strong>Date:</strong>
+                            {{ now()->format('Y-m-d H:i') }}
+                        </p>
                     @endif
                 </td>
             </tr>
         </table>
     </div>
 
-    {{-- REPORT INFO --}}
+
+    {{-- =========================================================
+         REPORT INFO
+    ========================================================== --}}
     @if($paymentReport)
+
         <table class="panel">
+
             <tr>
-                <td class="lbl">Shipper</td>
-                <td class="val">{{ $orders->first()?->user?->name ?? '-' }}</td>
-                <td class="lbl">Orders</td>
-                <td class="val">{{ $orders->count() }}</td>
+                <td class="lbl">
+                    Shipper
+                </td>
+
+                <td class="val">
+                    {{ $orders->first()?->user?->name ?? '-' }}
+                </td>
+
+                <td class="lbl">
+                    Orders
+                </td>
+
+                <td class="val">
+                    {{ $orders->count() }}
+                </td>
             </tr>
+
             <tr>
-                <td class="lbl">Total COD</td>
-                <td class="val">{{ number_format($paymentReport->total_cod ?? 0, 2) }} EGP</td>
-                <td class="lbl">Delivery Fees</td>
-                <td class="val">{{ number_format($paymentReport->total_delivery_cost ?? 0, 2) }} EGP</td>
+                <td class="lbl">
+                    Total COD
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->total_cod ?? 0, 2) }} EGP
+                </td>
+
+                <td class="lbl">
+                    Delivery Fees
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->total_delivery_cost ?? 0, 2) }} EGP
+                </td>
             </tr>
+
             <tr>
-                <td class="lbl">Insurance Fees</td>
-                <td class="val">{{ number_format($paymentReport->total_insurance_fees ?? 0, 2) }} EGP</td>
-                <td class="lbl">Open Package Fees</td>
-                <td class="val">{{ number_format($paymentReport->total_open_package_fees ?? 0, 2) }} EGP</td>
+                <td class="lbl">
+                    Insurance Fees
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->total_insurance_fees ?? 0, 2) }} EGP
+                </td>
+
+                <td class="lbl">
+                    Open Package Fees
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->total_open_package_fees ?? 0, 2) }} EGP
+                </td>
             </tr>
+
             <tr class="final">
-                <td class="lbl">Extra Fees</td>
-                <td class="val">{{ number_format($paymentReport->extra_fees ?? 0, 2) }} EGP</td>
-                <td class="lbl">Final Amount</td>
-                <td class="val">{{ number_format($paymentReport->final_amount ?? 0, 2) }} EGP</td>
+                <td class="lbl">
+                    Extra Fees
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->extra_fees ?? 0, 2) }} EGP
+                </td>
+
+                <td class="lbl">
+                    Final Amount
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->final_amount ?? 0, 2) }} EGP
+                </td>
             </tr>
+
         </table>
+
     @endif
 
-    {{-- ORDERS --}}
-    <h2 class="section-title">Order Details</h2>
+
+    {{-- =========================================================
+         ORDERS
+    ========================================================== --}}
+    <h2 class="section-title">
+        Order Details
+    </h2>
 
     <table class="orders">
+
         <thead>
             <tr>
                 <th>#</th>
@@ -266,45 +357,129 @@
         </thead>
 
         <tbody>
+
             @foreach($orders as $index => $order)
+
                 @php
                     $statusClass = 'status-progress';
 
-                    if (in_array($order->status, ['success_delivery', 'partial_return'])) {
+                    if (
+                        in_array($order->status, [
+                            'success_delivery',
+                            'partial_return',
+                        ])
+                    ) {
                         $statusClass = 'status-delivered';
-                    } elseif (in_array($order->status, ['undelivered', 'returned_to_shipper', 'returned_and_cost_paid'])) {
+
+                    } elseif (
+                        in_array($order->status, [
+                            'undelivered',
+                            'returned_to_shipper',
+                            'returned_and_cost_paid',
+                        ])
+                    ) {
                         $statusClass = 'status-failed';
                     }
+
+                    /*
+                     * Resolve the correct area table:
+                     *
+                     * Branch 2 -> AreaTier1
+                     * Branch 4 -> AreaTier2
+                     * Other    -> Area
+                     */
+                    $resolvedArea = $order->resolved_area;
                 @endphp
+
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $order->waybill_number }}</td>
-                    <td>{{ $order->order_id }}</td>
-                    <td>{{ $order->receiver_name }}</td>
-                    <td>{{ $order->receiver_mobile_1 }}</td>
-                    <td>{{ $order->city?->name ?? '-' }}</td>
-                    <td>{{ $order->area?->name ?? '-' }}</td>
-                    <td class="{{ $statusClass }}">{{ ucfirst(str_replace('_', ' ', $order->status)) }}</td>
-                    <td class="number">{{ number_format($order->cod_amount ?? 0, 2) }}</td>
-                    <td class="number">{{ number_format($order->delivery_cost ?? 0, 2) }}</td>
+
+                    <td>
+                        {{ $index + 1 }}
+                    </td>
+
+                    <td>
+                        {{ $order->waybill_number }}
+                    </td>
+
+                    <td>
+                        {{ $order->order_id }}
+                    </td>
+
+                    <td>
+                        {{ $order->receiver_name }}
+                    </td>
+
+                    <td>
+                        {{ $order->receiver_mobile_1 }}
+                    </td>
+
+                    <td>
+                        {{ $order->city?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $resolvedArea?->name ?? '-' }}
+                    </td>
+
+                    <td class="{{ $statusClass }}">
+                        {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                    </td>
+
+                    <td class="number">
+                        {{ number_format($order->cod_amount ?? 0, 2) }}
+                    </td>
+
+                    <td class="number">
+                        @if($order->status === 'undelivered')
+                            -
+                        @else
+                            {{ number_format($order->delivery_cost ?? 0, 2) }}
+                        @endif
+                    </td>
+
                 </tr>
+
             @endforeach
+
         </tbody>
+
     </table>
 
-    {{-- SUMMARY (only when this isn't tied to a saved payment report) --}}
+
+    {{-- =========================================================
+         SUMMARY
+         Only when this isn't tied to a saved payment report
+    ========================================================== --}}
     @if(!$paymentReport)
+
         <table class="summary">
+
             <tr>
-                <td class="label">Total COD</td>
-                <td class="number">{{ number_format($orders->sum('cod_amount'), 2) }} EGP</td>
+                <td class="label">
+                    Total COD
+                </td>
+
+                <td class="number">
+                    {{ number_format($orders->sum('cod_amount'), 2) }} EGP
+                </td>
             </tr>
+
             <tr>
-                <td class="label">Total Delivery Fees</td>
-                <td class="number">{{ number_format($orders->sum('delivery_cost'), 2) }} EGP</td>
+                <td class="label">
+                    Total Delivery Fees
+                </td>
+
+                <td class="number">
+                    {{ number_format($orders->sum('delivery_cost'), 2) }} EGP
+                </td>
             </tr>
+
             <tr class="total">
-                <td>Net Amount</td>
+
+                <td>
+                    Net Amount
+                </td>
+
                 <td class="number">
                     {{
                         number_format(
@@ -314,11 +489,21 @@
                         )
                     }} EGP
                 </td>
+
             </tr>
+
         </table>
+
     @endif
 
-    <div class="footer-note">Generated by Lynk &middot; This document is system-generated and does not require a signature.</div>
+
+    {{-- =========================================================
+         FOOTER
+    ========================================================== --}}
+    <div class="footer-note">
+        Generated by Lynk &middot;
+        This document is system-generated and does not require a signature.
+    </div>
 
 </body>
 </html>

@@ -61,6 +61,11 @@ class OrderResource extends Resource
 
                         $user = User::find($state);
 
+                        $set('area_id', null);
+                        $set('city_id', null);
+                        $set('delivery_cost', 0);
+                        $set('return_cost', 0);
+
                         if (! $user) {
                             return;
                         }
@@ -116,19 +121,21 @@ class OrderResource extends Resource
                     ->label('Area')
                     ->searchable()
                     ->preload()
-                    ->options(function () {
-                        $branchId = auth()->user()->branch_id ?? null;
+                    ->options(function (callable $get) {
+                        $userId = $get('users_id');
+                        $branchId = User::find($userId)?->branch_id ?? null;
 
                         if ($branchId == 2) {
                             return AreaTier1::pluck('name', 'id');
                         } elseif ($branchId == 4) {
                             return AreaTier2::pluck('name', 'id');
-                        } else {
-                            return Area::pluck('name', 'id');
                         }
+
+                        return Area::pluck('name', 'id');
                     })
-                    ->getOptionLabelUsing(function ($value) {
-                        $branchId = auth()->user()->branch_id ?? null;
+                    ->getOptionLabelUsing(function ($value, callable $get) {
+                        $userId = $get('users_id');
+                        $branchId = User::find($userId)?->branch_id ?? null;
 
                         if ($branchId == 2) {
                             $area = AreaTier1::find($value);
@@ -138,7 +145,9 @@ class OrderResource extends Resource
                             $area = Area::find($value);
                         }
 
-                        return $area ? $area->name.' - '.$area->name_ar : null;
+                        return $area
+                            ? $area->name.' - '.$area->name_ar
+                            : null;
                     })
                     ->required()
                     ->reactive()
@@ -159,6 +168,10 @@ class OrderResource extends Resource
                         }
 
                         if (! $area) {
+                            $set('city_id', null);
+                            $set('delivery_cost', 0);
+                            $set('return_cost', 0);
+
                             return;
                         }
 
@@ -168,6 +181,7 @@ class OrderResource extends Resource
                             $set('delivery_cost', $area->delivery_cost);
                         }
 
+                        $set('return_cost', $area->return_cost);
                         $set('city_id', $area->city_id);
                     }),
 
@@ -211,6 +225,10 @@ class OrderResource extends Resource
                         ->numeric()
                         ->default(0.00)
                         ->disabled()
+                        ->dehydrated(true),
+
+                    Forms\Components\Hidden::make('return_cost')
+                        ->default(0.00)
                         ->dehydrated(true),
                 ])->columns(2),
 
@@ -302,7 +320,14 @@ class OrderResource extends Resource
                                 return;
                             }
 
-                            $set('delivery_cost', $state === 'replacement' ? $area->exchange_cost : $area->delivery_cost);
+                            $set(
+                                'delivery_cost',
+                                $state === 'replacement'
+                                    ? $area->exchange_cost
+                                    : $area->delivery_cost
+                            );
+
+                            $set('return_cost', $area->return_cost);
                         }),
 
                     Forms\Components\TextInput::make('weight')->numeric()->placeholder('in kilograms'),

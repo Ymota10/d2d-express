@@ -42,6 +42,14 @@ class FinancialAnalysisResource extends Resource
 
         // Base Query
         $query = Order::query()
+            ->with([
+                'user',
+                'shipper',
+                'area',
+                'areaTier1',
+                'areaTier2',
+                'city',
+            ])
             ->whereIn('status', [
                 'success_delivery',
                 'undelivered',
@@ -104,10 +112,22 @@ class FinancialAnalysisResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('area.name')
+                Tables\Columns\TextColumn::make('area_display')
                     ->label('Area')
-                    ->searchable()
-                    ->sortable(),
+                    ->getStateUsing(fn ($record) => $record->resolved_area?->name)
+                    ->searchable(query: function ($query, $search) {
+                        $query->where(function ($q) use ($search) {
+                            $q->whereHas('area', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            })
+                                ->orWhereHas('areaTier1', function ($q) use ($search) {
+                                    $q->where('name', 'like', "%{$search}%");
+                                })
+                                ->orWhereHas('areaTier2', function ($q) use ($search) {
+                                    $q->where('name', 'like', "%{$search}%");
+                                });
+                        });
+                    }),
 
                 // Tables\Columns\TextColumn::make('order_id')
                 //     ->label('Order ID')
@@ -229,7 +249,19 @@ class FinancialAnalysisResource extends Resource
                 Tables\Columns\TextColumn::make('delivery_cost')
                     ->label('Delivery Cost')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(fn ($state, $record) => $record->status === 'undelivered' ? '-' : $state
+                    ),
+
+                Tables\Columns\TextColumn::make('return_cost')
+                    ->label('Return Cost')
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(
+                        fn ($state, $record) => $record->status === 'undelivered'
+                                ? $state
+                                : '-'
+                    ),
 
                 Tables\Columns\TextColumn::make('insurancePackage.name')
                     ->label('Insurance')
@@ -361,8 +393,11 @@ class FinancialAnalysisResource extends Resource
                                 )
                                 ->sum('cod_amount');
 
-                            $totalShipping =
-                                $records->sum('delivery_cost');
+                            $totalShipping = $records->sum(function ($order) {
+                                return $order->status === 'undelivered'
+                                    ? $order->return_cost
+                                    : $order->delivery_cost;
+                            });
 
                             $totalInsurance =
                                 $records->sum('insurance_fee');
@@ -521,8 +556,11 @@ class FinancialAnalysisResource extends Resource
                                 )
                                 ->sum('cod_amount');
 
-                            $totalShipping =
-                                $records->sum('delivery_cost');
+                            $totalShipping = $records->sum(function ($order) {
+                                return $order->status === 'undelivered'
+                                    ? $order->return_cost
+                                    : $order->delivery_cost;
+                            });
 
                             $openPackageFees =
                                 $records->sum('open_package_fee');

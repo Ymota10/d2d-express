@@ -22,8 +22,19 @@ class OrdersInReportTable extends BaseWidget
 
         return $table
             ->heading('Select orders to export excel sheet')
-            ->query(Order::query()->whereIn('id', $orderIds))
-            ->columns([
+            ->query(
+                Order::query()
+                    ->with([
+                        'user',
+                        'shipper',
+                        'area',
+                        'areaTier1',
+                        'areaTier2',
+                        'city',
+                    ])
+                    ->whereIn('id', $orderIds)
+            )->columns([
+
                 Tables\Columns\TextColumn::make('waybill_number')->label('Waybill')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Service Type')
@@ -40,8 +51,22 @@ class OrdersInReportTable extends BaseWidget
                     ->visible(fn () => auth()->user()?->management === 'admin'),
                 Tables\Columns\TextColumn::make('receiver_name')->label('Receiver Name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('receiver_mobile_1')->label('Receiver Mobile 1')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('area.name')->label('Area')->searchable()->sortable(),
-                // Tables\Columns\TextColumn::make('city.name')->label('City')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('area_display')
+                    ->label('Area')
+                    ->getStateUsing(fn ($record) => $record->resolved_area?->name)
+                    ->searchable(query: function ($query, $search) {
+                        $query->where(function ($q) use ($search) {
+                            $q->whereHas('area', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            })
+                                ->orWhereHas('areaTier1', function ($q) use ($search) {
+                                    $q->where('name', 'like', "%{$search}%");
+                                })
+                                ->orWhereHas('areaTier2', function ($q) use ($search) {
+                                    $q->where('name', 'like', "%{$search}%");
+                                });
+                        });
+                    }),                // Tables\Columns\TextColumn::make('city.name')->label('City')->searchable()->sortable(),
 
                 // Tables\Columns\TextColumn::make('receiver_mobile_2')->label('Receiver Mobile 2')->searchable()->sortable(),
                 // Tables\Columns\TextColumn::make('receiver_address')
@@ -83,7 +108,22 @@ class OrdersInReportTable extends BaseWidget
                         default => 'secondary',
                     }),
 
-                Tables\Columns\TextColumn::make('delivery_cost')->label('Delivery Cost')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('delivery_cost')
+                    ->label('Delivery Cost')
+                    ->searchable()
+                    ->sortable()
+                    ->formatStateUsing(fn ($state, $record) => $record->status === 'undelivered' ? '-' : $state
+                    ),
+
+                Tables\Columns\TextColumn::make('return_cost')
+                    ->label('Return Cost')
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(
+                        fn ($state, $record) => $record->status === 'undelivered'
+                                ? $state
+                                : '-'
+                    ),
 
                 Tables\Columns\BadgeColumn::make('open_package')
                     ->label('Open Package')
@@ -149,6 +189,8 @@ class OrdersInReportTable extends BaseWidget
                             $orders = Order::with([
                                 'user',
                                 'area',
+                                'areaTier1',
+                                'areaTier2',
                                 'city',
                             ])
                                 ->whereIn('id', $records->pluck('id'))

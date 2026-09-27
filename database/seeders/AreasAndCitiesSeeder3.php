@@ -1054,7 +1054,7 @@ class AreasAndCitiesSeeder3 extends Seeder
             ['city_id' => 6, 'name' => 'ElShorouk - May Fair (ElShorouk)', 'name_ar' => 'الشروق - ماي فير (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
             ['city_id' => 6, 'name' => 'ElShorouk - Merida ElShorouk (ElShorouk)', 'name_ar' => 'الشروق - ميريدا الشروق (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
             ['city_id' => 6, 'name' => 'ElShorouk - Panorama ElShorouk (ElShorouk)', 'name_ar' => 'الشروق - بانوراما الشروق (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
-            ['city_id' => 6, 'name' => 'ElShorouk - Paradise (ElShorouk)', 'name_ar' => 'الشروق - بارادايس (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
+            ['city_id' => 6, 'name' => 'ElShorouk - Paradise (ElShorouk)', 'name_ar' => 'الشروق - بارادايس (الشروق)', 'delivery_cost' => 76, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
             ['city_id' => 6, 'name' => 'ElShorouk - Pearl (ElShorouk)', 'name_ar' => 'الشروق - بيرل (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
             ['city_id' => 6, 'name' => 'ElShorouk - SODIC East (ElShorouk)', 'name_ar' => 'الشروق - سوديك إيست (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
             ['city_id' => 6, 'name' => 'ElShorouk - Sakan Misr (ElShorouk)', 'name_ar' => 'الشروق - سكن مصر (الشروق)', 'delivery_cost' => 70, 'return_cost' => 70, 'replacement_partial_delivery_cost' => 70, 'overweight_cost' => 5, 'refund_cost' => 70, 'exchange_cost' => 85],
@@ -3178,6 +3178,71 @@ class AreasAndCitiesSeeder3 extends Seeder
             ['city_id' => 27, 'name' => 'Sokhna road to saffron', 'name_ar' => 'طريق السخنة إلى الزعفران', 'delivery_cost' => 105, 'return_cost' => 105, 'replacement_partial_delivery_cost' => 105, 'overweight_cost' => 5, 'refund_cost' => 105, 'exchange_cost' => 115],
 
         ]);
+
+        // ZONE 1
+
+        DB::table('areas_tier_2')
+            ->whereIn('city_id', [6, 11])
+            ->update([
+                'return_cost' => 55,
+                'exchange_cost' => 92,
+                'refund_cost' => 92,
+            ]);
+
+        // ZONE 2
+
+        DB::table('areas_tier_2')
+            ->whereIn('city_id', [1, 4])
+            ->update([
+                'delivery_cost' => 76,
+                'return_cost' => 60,
+                'exchange_cost' => 98,
+                'refund_cost' => 98,
+            ]);
+
+        // ZONE 3
+
+        DB::table('areas_tier_2')
+            ->whereIn('city_id', [21, 17, 24, 10, 7, 8, 13, 12, 27, 20])
+            ->update([
+                'delivery_cost' => 82,
+                'return_cost' => 65,
+                'exchange_cost' => 103,
+                'refund_cost' => 103,
+            ]);
+
+        // ZONE 4
+
+        DB::table('areas_tier_2')
+            ->whereIn('city_id', [9, 16, 25, 5, 3])
+            ->update([
+                'delivery_cost' => 94,
+                'return_cost' => 75,
+                'exchange_cost' => 132,
+                'refund_cost' => 132,
+            ]);
+
+        // ZONE 5
+
+        DB::table('areas_tier_2')
+            ->whereIn('city_id', [2, 14, 15, 23, 22])
+            ->update([
+                'delivery_cost' => 106,
+                'return_cost' => 85,
+                'exchange_cost' => 140,
+                'refund_cost' => 140,
+            ]);
+
+        // ZONE 6
+
+        DB::table('areas_tier_2')
+            ->whereIn('city_id', [18, 19, 26])
+            ->update([
+                'delivery_cost' => 135,
+                'return_cost' => 100,
+                'exchange_cost' => 175,
+                'refund_cost' => 175,
+            ]);
 
     }
 }

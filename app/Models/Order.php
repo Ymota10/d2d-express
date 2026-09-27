@@ -33,6 +33,7 @@ class Order extends Model
         'receiver_address',
         'receiver_area',
         'delivery_cost',
+        'return_cost',
 
         // Shipment Data
         'item_name',
@@ -57,12 +58,18 @@ class Order extends Model
         'insurance_fee',
         'insured_amount',
 
-        // externals
+        // Externals
         'source',
         'external_order_id',
         'external_payload',
 
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | User / Role Helpers
+    |--------------------------------------------------------------------------
+    */
 
     public function isAdmin(): bool
     {
@@ -79,34 +86,101 @@ class Order extends Model
         return $this->management === 'courier';
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Location Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function city()
     {
-        return $this->belongsTo(\App\Models\City::class, 'city_id');
+        return $this->belongsTo(City::class, 'city_id');
     }
 
-    /**
-     * Dynamic area relationship
-     * Branch 2 → AreaTier1
-     * Others → Area
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | Area Relationships
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    |
+    | area_id can point to:
+    |
+    | Branch 2 -> areas_tier_1
+    | Branch 4 -> areas_tier_2
+    | Other    -> areas
+    |
+    | These must remain separate relationships because Eloquent cannot
+    | safely change the related model class dynamically per Order record.
+    |
+    */
+
+    // Normal / default areas
     public function area()
     {
-        $branchId = $this->users?->branch_id ?? $this->shipper?->branch_id ?? null;
+        return $this->belongsTo(Area::class, 'area_id');
+    }
+
+    // Branch 2
+    public function areaTier1()
+    {
+        return $this->belongsTo(AreaTier1::class, 'area_id');
+    }
+
+    // Branch 4
+    public function areaTier2()
+    {
+        return $this->belongsTo(AreaTier2::class, 'area_id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Resolved Area
+    |--------------------------------------------------------------------------
+    |
+    | Use:
+    |
+    | $order->resolved_area
+    |
+    | or:
+    |
+    | $order->resolved_area?->name
+    |
+    | This automatically selects the correct area table according to
+    | the shipper's branch.
+    |
+    */
+
+    public function getResolvedAreaAttribute()
+    {
+        $branchId = $this->shipper?->branch_id
+            ?? $this->user?->branch_id;
 
         if ($branchId == 2) {
-            return $this->belongsTo(\App\Models\AreaTier1::class, 'area_id');
+            return $this->areaTier1;
         }
 
         if ($branchId == 4) {
-            return $this->belongsTo(\App\Models\AreaTier2::class, 'area_id');
+            return $this->areaTier2;
         }
 
-        return $this->belongsTo(\App\Models\Area::class, 'area_id');
+        return $this->area;
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shipper / User Relationships
+    |--------------------------------------------------------------------------
+    */
 
     public function shipper()
     {
         return $this->belongsTo(User::class, 'shipper_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'users_id');
     }
 
     public function branch()
@@ -114,20 +188,27 @@ class Order extends Model
         return $this->belongsTo(Branches::class);
     }
 
-    public function user()
-    {
-        return $this->belongsTo(\App\Models\User::class, 'users_id');
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Other Relationships
+    |--------------------------------------------------------------------------
+    */
 
     public function attempts()
     {
-        return $this->hasMany(\App\Models\OrderAttempt::class);
+        return $this->hasMany(OrderAttempt::class);
     }
 
     public function insurancePackage()
     {
-        return $this->belongsTo(\App\Models\InsurancePackage::class);
+        return $this->belongsTo(InsurancePackage::class);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Model Events
+    |--------------------------------------------------------------------------
+    */
 
     protected static function booted()
     {
