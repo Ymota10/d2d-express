@@ -33,6 +33,10 @@ class User extends Authenticatable
         'image',
         'warehousing',
         'waybill_prefix',
+        'bank_name',
+        'bank_account_name',
+        'bank_account_number',
+        'bank_iban',
     ];
 
     protected $hidden = [

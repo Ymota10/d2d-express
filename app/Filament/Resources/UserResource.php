@@ -34,6 +34,7 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
+
             Forms\Components\Select::make('management')
                 ->label('Management Role')
                 ->options([
@@ -64,7 +65,6 @@ class UserResource extends Resource
 
             Forms\Components\TextInput::make('national_id')
                 ->label('National ID')
-                // ->required()
                 ->unique(ignoreRecord: true),
 
             Forms\Components\Select::make('city_id')
@@ -128,6 +128,41 @@ class UserResource extends Resource
                 ->label('Warehousing')
                 ->default(false),
 
+            /*
+            |--------------------------------------------------------------------------
+            | Bank Details
+            |--------------------------------------------------------------------------
+            */
+
+            Forms\Components\Section::make('Bank Details')
+                ->description('Bank account information for this shipper.')
+                ->schema([
+
+                    Forms\Components\TextInput::make('bank_name')
+                        ->label('Bank Name')
+                        ->placeholder('e.g. CIB, Banque Misr, NBE')
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('bank_account_name')
+                        ->label('Account Name')
+                        ->placeholder('Exact name registered on the bank account')
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('bank_account_number')
+                        ->label('Account Number')
+                        ->placeholder('Bank account number')
+                        ->maxLength(255),
+
+                    Forms\Components\TextInput::make('bank_iban')
+                        ->label('IBAN')
+                        ->placeholder('IBAN for transfers')
+                        ->maxLength(255)
+                        ->dehydrateStateUsing(
+                            fn ($state) => strtoupper($state)
+                        ),
+                ])
+                ->columns(2),
+
             Forms\Components\TextInput::make('waybill_prefix')
                 ->label('Waybill Prefix')
                 ->maxLength(10)
@@ -140,8 +175,12 @@ class UserResource extends Resource
                 ->label('Password')
                 ->password()
                 ->required(fn ($livewire) => $livewire instanceof Pages\CreateUser)
-                ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
-                ->dehydrated(fn ($state) => filled($state)),
+                ->dehydrateStateUsing(
+                    fn ($state) => filled($state) ? bcrypt($state) : null
+                )
+                ->dehydrated(
+                    fn ($state) => filled($state)
+                ),
 
             Forms\Components\TextInput::make('password_confirmation')
                 ->label('Confirm Password')
@@ -149,6 +188,7 @@ class UserResource extends Resource
                 ->same('password')
                 ->required(fn ($livewire) => $livewire instanceof Pages\CreateUser)
                 ->dehydrated(false),
+
         ])->columns(2);
     }
 
@@ -156,54 +196,111 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('management')->label('Role')->sortable(),
-                Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('phone')->label('Phone'),
-                Tables\Columns\TextColumn::make('phone_secondary')->label('Secondary Phone'),
-                Tables\Columns\TextColumn::make('email')->label('Email')->sortable(),
-                Tables\Columns\TextColumn::make('national_id')->label('National ID'),
-                Tables\Columns\TextColumn::make('city.name')->label('City'),
-                Tables\Columns\TextColumn::make('branch.name')->label('Branch'),
-                Tables\Columns\TextColumn::make('insurancePackage.name')->label('Insurance')->badge()->placeholder('No Insurance'),
-                Tables\Columns\TextColumn::make('gender')->label('Gender'),
+
+                Tables\Columns\TextColumn::make('management')
+                    ->label('Role')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('name')
+                    ->sortable()
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Phone'),
+
+                Tables\Columns\TextColumn::make('phone_secondary')
+                    ->label('Secondary Phone'),
+
+                Tables\Columns\TextColumn::make('email')
+                    ->label('Email')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('national_id')
+                    ->label('National ID'),
+
+                Tables\Columns\TextColumn::make('city.name')
+                    ->label('City'),
+
+                Tables\Columns\TextColumn::make('branch.name')
+                    ->label('Branch'),
+
+                /*
+                |--------------------------------------------------------------------------
+                | Bank Details
+                |--------------------------------------------------------------------------
+                */
+
+                Tables\Columns\TextColumn::make('bank_name')
+                    ->label('Bank Name'),
+
+                Tables\Columns\TextColumn::make('bank_account_name')
+                    ->label('Account Name'),
+
+                Tables\Columns\TextColumn::make('bank_account_number')
+                    ->label('Account Number'),
+
+                Tables\Columns\TextColumn::make('bank_iban')
+                    ->label('IBAN'),
+
+                Tables\Columns\TextColumn::make('insurancePackage.name')
+                    ->label('Insurance')
+                    ->badge()
+                    ->placeholder('No Insurance'),
+
+                Tables\Columns\TextColumn::make('gender')
+                    ->label('Gender'),
+
                 Tables\Columns\ImageColumn::make('profile_photo')
                     ->label('Profile Photo')
                     ->circular()
                     ->size(50),
             ])
+
             ->filters([
                 Tables\Filters\SelectFilter::make('management')
                     ->options([
                         'admin' => 'Admin',
                         'courier' => 'Courier',
                         'shipper' => 'Shipper',
+                        'track_express' => 'Track Express',
                     ]),
             ])
+
             ->actions([
                 Tables\Actions\ViewAction::make(),
+
                 Tables\Actions\EditAction::make(),
+
                 Tables\Actions\DeleteAction::make(),
 
                 Action::make('loginAs')
                     ->label('Login As')
                     ->icon('heroicon-m-finger-print')
                     ->color('primary')
-                    ->visible(fn ($record) => auth()->user()->management === 'admin')
+                    ->visible(
+                        fn ($record) => auth()->user()->management === 'admin'
+                    )
                     ->requiresConfirmation()
                     ->action(function ($record) {
+
                         // Save current admin ID so they can return later
                         Session::put('impersonator_id', Auth::id());
 
                         // Log in as selected user
-                        Auth::guard(config('filament.auth.guard', 'web'))->login($record);
+                        Auth::guard(
+                            config('filament.auth.guard', 'web')
+                        )->login($record);
 
                         // Regenerate session to ensure security
                         Session::regenerate();
 
                         // Redirect to user's dashboard
-                        return redirect()->route('filament.admin.pages.dashboard');
+                        return redirect()->route(
+                            'filament.admin.pages.dashboard'
+                        );
                     }),
             ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
