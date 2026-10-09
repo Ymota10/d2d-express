@@ -138,10 +138,48 @@ class UserResource extends Resource
                 ->description('Bank account information for this shipper.')
                 ->schema([
 
-                    Forms\Components\TextInput::make('bank_name')
+                    Forms\Components\Select::make('bank_name')
                         ->label('Bank Name')
-                        ->placeholder('e.g. CIB, Banque Misr, NBE')
-                        ->maxLength(255),
+                        ->options([
+                            'National Bank of Egypt (NBE)' => 'National Bank of Egypt (NBE)',
+                            'Banque Misr' => 'Banque Misr',
+                            'Commercial International Bank (CIB)' => 'Commercial International Bank (CIB)',
+                            'Banque du Caire' => 'Banque du Caire',
+                            'AlexBank' => 'AlexBank',
+                            'QNB Egypt' => 'QNB Egypt',
+                            'Arab African International Bank (AAIB)' => 'Arab African International Bank (AAIB)',
+                            'Arab International Bank (AIB)' => 'Arab International Bank (AIB)',
+                            'Arab Investment Bank (aiBANK)' => 'Arab Investment Bank (aiBANK)',
+                            'Agricultural Bank of Egypt (ABE)' => 'Agricultural Bank of Egypt (ABE)',
+                            'Egyptian Arab Land Bank' => 'Egyptian Arab Land Bank',
+                            'Housing and Development Bank (HDB)' => 'Housing and Development Bank (HDB)',
+                            'Industrial Development Bank (IDB)' => 'Industrial Development Bank (IDB)',
+                            'Export Development Bank of Egypt (EBank)' => 'Export Development Bank of Egypt (EBank)',
+                            'Suez Canal Bank' => 'Suez Canal Bank',
+                            'The United Bank' => 'The United Bank',
+                            'Faisal Islamic Bank of Egypt' => 'Faisal Islamic Bank of Egypt',
+                            'Al Baraka Bank Egypt' => 'Al Baraka Bank Egypt',
+                            'Abu Dhabi Islamic Bank Egypt (ADIB)' => 'Abu Dhabi Islamic Bank Egypt (ADIB)',
+                            'Abu Dhabi Commercial Bank Egypt (ADCB)' => 'Abu Dhabi Commercial Bank Egypt (ADCB)',
+                            'Emirates NBD Egypt' => 'Emirates NBD Egypt',
+                            'First Abu Dhabi Bank Misr (FABMISR)' => 'First Abu Dhabi Bank Misr (FABMISR)',
+                            'HSBC Bank Egypt' => 'HSBC Bank Egypt',
+                            'Mashreq Bank Egypt' => 'Mashreq Bank Egypt',
+                            'Citibank Egypt' => 'Citibank Egypt',
+                            'Crédit Agricole Egypt' => 'Crédit Agricole Egypt',
+                            'Société Arabe Internationale de Banque (SAIB)' => 'Société Arabe Internationale de Banque (SAIB)',
+                            'Egyptian Gulf Bank (EGBANK)' => 'Egyptian Gulf Bank (EGBANK)',
+                            'Bank ABC Egypt' => 'Bank ABC Egypt',
+                            'Arab Bank Egypt' => 'Arab Bank Egypt',
+                            'Attijariwafa bank Egypt' => 'Attijariwafa bank Egypt',
+                            'Al Ahli Bank of Kuwait Egypt (ABK)' => 'Al Ahli Bank of Kuwait Egypt (ABK)',
+                            'National Bank of Kuwait Egypt (NBK)' => 'National Bank of Kuwait Egypt (NBK)',
+                            'Kuwait Finance House Egypt (KFH)' => 'Kuwait Finance House Egypt (KFH)',
+                            'onebank' => 'onebank',
+                            'Other' => 'Other',
+                        ])
+                        ->searchable()
+                        ->required(),
 
                     Forms\Components\TextInput::make('bank_account_name')
                         ->label('Account Name')
