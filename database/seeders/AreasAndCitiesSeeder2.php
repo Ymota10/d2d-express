@@ -3184,6 +3184,7 @@ class AreasAndCitiesSeeder2 extends Seeder
         DB::table('areas_tier_1')
             ->whereIn('city_id', [6, 11])
             ->update([
+                'delivery_cost' => 75,
                 'return_cost' => 58,
                 'exchange_cost' => 92,
                 'refund_cost' => 92,
