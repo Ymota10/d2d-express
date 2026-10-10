@@ -107,7 +107,6 @@ class FinancialSummary extends BaseWidget
         $netDeserved =
             $totalCodAmount
             - $d2dRevenue
-            - $openPackageTotal
             - $insuranceTotal;
 
         /*

@@ -15,11 +15,11 @@ class FinanceSummaryChart extends ChartWidget
     {
         $user = auth()->user();
 
-        // ✅ Base query
+        // Base query: only orders not yet collected
         $ordersQuery = Order::query()
             ->where('is_collected', 0);
 
-        // ✅ Restrict to logged-in user's data if not admin
+        // Restrict non-admin users to their own orders
         if (! $user->isAdmin()) {
             $ordersQuery->where('users_id', $user->id);
             $this->viewType = 'My Orders View';
@@ -27,27 +27,45 @@ class FinanceSummaryChart extends ChartWidget
             $this->viewType = 'Admin View (All Orders)';
         }
 
-        // ✅ Define statuses
-        $collectedCashStatuses = ['success_delivery', 'partial_return'];
-        $shippingFeeStatuses = ['success_delivery', 'partial_return', 'undelivered'];
+        // Define statuses
+        $collectedCashStatuses = [
+            'success_delivery',
+            'partial_return',
+        ];
 
-        // 1️⃣ Collected Cash (COD)
+        $shippingFeeStatuses = [
+            'success_delivery',
+            'partial_return',
+            'undelivered',
+        ];
+
+        // 1. Collected Cash (COD)
         $collectedCash = (clone $ordersQuery)
             ->whereIn('status', $collectedCashStatuses)
             ->sum('cod_amount');
 
-        // 2️⃣ Shipping Fees (delivery_cost)
+        // 2. Shipping Fees:
+        // Undelivered = return_cost
+        // Successful/partial delivery = delivery_cost
         $shippingFees = (clone $ordersQuery)
             ->whereIn('status', $shippingFeeStatuses)
-            ->sum('delivery_cost');
+            ->get()
+            ->sum(function ($order) {
+                return $order->status === 'undelivered'
+                    ? $order->return_cost
+                    : $order->delivery_cost;
+            });
 
-        // 3️⃣ Open Package Fees
-        $openPackageFees = (clone $ordersQuery)->sum('open_package_fee');
+        // 3. Open Package Fees
+        $openPackageFees = (clone $ordersQuery)
+            ->whereIn('status', $shippingFeeStatuses)
+            ->where('open_package', 'yes')
+            ->sum('open_package_fee');
 
-        // ✅ Combine Shipping + Open Package Fees
-        $totalFees = $shippingFees + $openPackageFees;
+        // 4. Total Fees
+        $totalFees = $shippingFees;
 
-        // 4️⃣ Net Profit = Collected Cash - (Shipping + Open Package Fees)
+        // 5. Net Profit
         $netProfit = $collectedCash - $totalFees;
 
         return [
@@ -60,9 +78,9 @@ class FinanceSummaryChart extends ChartWidget
                         $netProfit,
                     ],
                     'backgroundColor' => [
-                        'rgba(40, 167, 69, 0.5)',   // ✅ Collected Cash - green
-                        'rgba(255, 193, 7, 0.5)',   // ✅ Total Fees (Shipping + Open Package) - yellow
-                        'rgba(0, 123, 255, 0.5)',   // ✅ Net Profit - blue
+                        'rgba(40, 167, 69, 0.5)',
+                        'rgba(255, 193, 7, 0.5)',
+                        'rgba(0, 123, 255, 0.5)',
                     ],
                     'borderColor' => [
                         'rgba(40, 167, 69, 1)',
@@ -72,7 +90,11 @@ class FinanceSummaryChart extends ChartWidget
                     'borderWidth' => 2,
                 ],
             ],
-            'labels' => ['Collected Cash', 'Total Fees', 'Net Profit'],
+            'labels' => [
+                'Collected Cash',
+                'Total Fees',
+                'Net Profit',
+            ],
         ];
     }
 
