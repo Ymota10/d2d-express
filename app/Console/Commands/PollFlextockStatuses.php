@@ -276,14 +276,9 @@ class PollFlextockStatuses extends Command
                 default => null,
             },
 
-            // Pending alone does not determine a new LYNK status.
+            // Pending and ready do not determine a new LYNK status.
             'pending' => null,
-
-            'ready' => match ($subStatus) {
-                '' => 'warehouse_received',
-                'rescheduled' => 'time_scheduled',
-                default => null,
-            },
+            'ready' => null,
 
             'processing' => match ($subStatus) {
                 '' => 'warehouse_received',
@@ -311,9 +306,7 @@ class PollFlextockStatuses extends Command
                 default => null,
             },
 
-            'canceled', 'cancelled' => $subStatus === ''
-                ? 'undelivered'
-                : null,
+            'canceled', 'cancelled' => 'undelivered',
 
             'lost' => 'lost',
 
