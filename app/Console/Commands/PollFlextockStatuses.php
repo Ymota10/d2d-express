@@ -60,7 +60,7 @@ class PollFlextockStatuses extends Command
              * dedicated provider marker before enabling automatic polling.
              */
             $orders = Order::query()
-                ->where('waybill_number', 'PSYCHTEAM-647480')
+                ->where('waybill_number', 'SONNYANGEL-053957')
                 ->whereNotNull('waybill_number')
                 ->where('waybill_number', '!=', '')
                 ->get([
@@ -296,12 +296,7 @@ class PollFlextockStatuses extends Command
 
             'pick up', 'picked by driver' => null,
 
-            'in transit' => match ($subStatus) {
-                'out for delivery' => 'out_for_delivery',
-                'failed attempt' => 'failed_attempt',
-                'lost' => 'lost',
-                default => null,
-            },
+            'in transit' => 'out_for_delivery',
 
             'returning' => $subStatus === 'rto'
                 ? 'undelivered'
