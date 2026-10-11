@@ -42,16 +42,34 @@
             margin-bottom: 4px;
         }
 
-        .qr-wrapper {
+       
+.qr-wrapper {
     text-align: center;
+    white-space: nowrap;
+}
+
+.barcode-item {
+    display: inline-block;
+    vertical-align: top;
+    width: 48%;
+    text-align: center;
+    white-space: normal;
+}
+
+.barcode-item img {
+    width: 100%;
+    max-width: 175px;
+    height: 45px;
 }
 
 .waybill-number {
     margin-top: 4px;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
 }
+
 
         /* SUMMARY */
         .summary {
@@ -155,17 +173,36 @@
     <!-- HEADER -->
     <div class="header">
 
-      <!-- BARCODE -->
+    
+<!-- BARCODE -->
 <div class="qr-wrapper">
+
+<!-- Existing barcode: unchanged value -->
+<div class="barcode-item">
     <img
         src="https://barcode.tec-it.com/barcode.ashx?data={{ urlencode($order->waybill_number ?? '123456789') }}&code=Code128&dpi=96"
-        alt="Barcode"
-        style="height:60px; width:220px;"
+        alt="D2D Barcode"
     >
 
     <div class="waybill-number">
         {{ $order->waybill_number ?? '123456789' }}
     </div>
+</div>
+
+<!-- Flextock barcode: admin users only -->
+@if (auth()->user()?->isAdmin())
+    <div class="barcode-item">
+        <img
+            src="https://barcode.tec-it.com/barcode.ashx?data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}&code=Code128&dpi=96"
+            alt="Flextock Barcode"
+        >
+
+        <div class="waybill-number">
+            {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
+        </div>
+    </div>
+@endif
+
 </div>
 
     </div>

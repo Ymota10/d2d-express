@@ -49,16 +49,31 @@
             margin-bottom: 8px;
         }
 
-        .barcode-block img {
-            width: 110px;
-            height: 110px;
-        }
+        
+.barcode-block {
+    text-align: center;
+    white-space: nowrap;
+}
 
-        .number {
-            font-size: 13px;
-            font-weight: bold;
-            margin-top: 4px;
-        }
+.qr-item {
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 8px;
+    white-space: normal;
+}
+
+.barcode-block img {
+    width: 110px;
+    height: 110px;
+}
+
+.number {
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+}
+
 
         /* MAIN TABLE */
         .main-table {
@@ -173,10 +188,11 @@
 <div class="waybill">
 
     <!-- HEADER -->
-    <div class="top-row">
+<div class="top-row">
+    <div class="barcode-block">
 
-        <div class="barcode-block">
-
+        <!-- Existing QR code: unchanged -->
+        <div class="qr-item">
             <img
                 src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($order->waybill_number ?? '123456789') }}"
                 alt="QR Code"
@@ -185,10 +201,24 @@
             <div class="number">
                 {{ $order->waybill_number ?? '123456789' }}
             </div>
-
         </div>
 
+        <!-- Flextock QR code: admin users only -->
+        @if (auth()->user()?->isAdmin())
+            <div class="qr-item">
+                <img
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}"
+                    alt="Flextock QR Code"
+                >
+
+                <div class="number">
+                    {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
+                </div>
+            </div>
+        @endif
+
     </div>
+</div>
 
     <!-- MAIN -->
     <table class="main-table">
