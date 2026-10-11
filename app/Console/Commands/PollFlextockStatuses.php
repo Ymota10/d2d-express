@@ -60,7 +60,6 @@ class PollFlextockStatuses extends Command
              * dedicated provider marker before enabling automatic polling.
              */
             $orders = Order::query()
-                ->where('waybill_number', 'SONNYANGEL-053957')
                 ->whereNotNull('waybill_number')
                 ->where('waybill_number', '!=', '')
                 ->get([
