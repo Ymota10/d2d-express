@@ -240,13 +240,11 @@ class OrderResource extends Resource
                         ->numeric()
                         ->placeholder('Including Shipping Fees')
                         ->required()
-                        ->live()
+                        ->live(debounce: 500)
                         ->afterStateUpdated(function ($state, callable $set, callable $get) {
-
                             $user = User::find($get('users_id'));
 
                             if (! $user?->insurancePackage) {
-
                                 $set('insurance_fee', 0);
                                 $set('insured_amount', 0);
 
@@ -255,19 +253,17 @@ class OrderResource extends Resource
 
                             $package = $user->insurancePackage;
 
-                            $fee = ($state * $package->percentage) / 100;
+                            $amount = (float) ($state ?? 0);
 
-                            if ($fee < $package->minimum_fee) {
-                                $fee = $package->minimum_fee;
-                            }
-
-                            if ($package->percentage == 0) {
-                                $fee = 0;
-                            }
+                            $fee = $package->percentage == 0
+                                ? 0
+                                : max(
+                                    ($amount * $package->percentage) / 100,
+                                    $package->minimum_fee
+                                );
 
                             $set('insurance_fee', round($fee, 2));
-
-                            $set('insured_amount', $state);
+                            $set('insured_amount', $amount);
                         }),
 
                     Forms\Components\Hidden::make('insurance_package_id'),
