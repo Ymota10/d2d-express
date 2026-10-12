@@ -3179,5 +3179,71 @@ class AreasAndCitiesSeeder extends Seeder
 
         ]);
 
+        // ZONE 1
+
+        DB::table('areas')
+            ->whereIn('city_id', [6, 11])
+            ->update([
+                'delivery_cost' => 80,
+                'return_cost' => 65,
+                'exchange_cost' => 92,
+                'refund_cost' => 92,
+            ]);
+
+        // ZONE 2
+
+        DB::table('areas')
+            ->whereIn('city_id', [1, 4])
+            ->update([
+                'delivery_cost' => 90,
+                'return_cost' => 72,
+                'exchange_cost' => 98,
+                'refund_cost' => 98,
+            ]);
+
+        // ZONE 3
+
+        DB::table('areas')
+            ->whereIn('city_id', [21, 17, 24, 10, 7, 8, 13, 12, 27, 20])
+            ->update([
+                'delivery_cost' => 98,
+                'return_cost' => 77,
+                'exchange_cost' => 103,
+                'refund_cost' => 103,
+            ]);
+
+        // ZONE 4
+
+        DB::table('areas')
+            ->whereIn('city_id', [9, 16, 25, 5, 3])
+            ->update([
+                'delivery_cost' => 110,
+                'return_cost' => 92,
+                'exchange_cost' => 132,
+                'refund_cost' => 132,
+            ]);
+
+        // ZONE 5
+
+        DB::table('areas')
+            ->whereIn('city_id', [2, 14, 15, 23, 22])
+            ->update([
+                'delivery_cost' => 125,
+                'return_cost' => 100,
+                'exchange_cost' => 140,
+                'refund_cost' => 140,
+            ]);
+
+        // ZONE 6
+
+        DB::table('areas')
+            ->whereIn('city_id', [18, 19, 26])
+            ->update([
+                'delivery_cost' => 142,
+                'return_cost' => 107,
+                'exchange_cost' => 175,
+                'refund_cost' => 175,
+            ]);
+
     }
 }
