@@ -172,7 +172,7 @@ class OrderResource extends Resource
                             return;
                         }
 
-                        if ($get('service_type') === 'replacement') {
+                        if (in_array($get('service_type'), ['replacement', 'refund'], true)) {
                             $set('delivery_cost', $area->exchange_cost);
                         } else {
                             $set('delivery_cost', $area->delivery_cost);
@@ -315,7 +315,7 @@ class OrderResource extends Resource
 
                             $set(
                                 'delivery_cost',
-                                $state === 'replacement'
+                                in_array($state, ['replacement', 'refund'], true)
                                     ? $area->exchange_cost
                                     : $area->delivery_cost
                             );
@@ -663,54 +663,88 @@ class OrderResource extends Resource
             ])
 
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
 
-                Tables\Actions\Action::make('edit')
-                    ->label('Edit')
-                    ->icon('heroicon-o-pencil')
-                    ->color(fn ($record) => auth()->user()->management === 'admin'
+                    Tables\Actions\Action::make('edit')
+                        ->label('Edit')
+                        ->icon('heroicon-o-pencil')
+                        ->color(fn ($record) => auth()->user()->management === 'admin'
                             ? 'primary'
                             : ($record->status === 'pickup_request' ? 'primary' : 'gray')
-                    )
-                    ->extraAttributes(fn ($record) => [
-                        'title' => (! in_array(auth()->user()->management, ['admin', 'track_express']) && $record->status !== 'pickup_request')
-                            ? 'You cannot edit order in this current state'
-                            : 'Edit this order',
-                        'style' => (! in_array(auth()->user()->management, ['admin', 'track_express']) && $record->status !== 'pickup_request')
-                            ? 'cursor:not-allowed; opacity:0.6; pointer-events:auto;'
-                            : '',
-                    ])
-                    ->action(function ($record) {
+                        )
+                        ->extraAttributes(fn ($record) => [
+                            'title' => (
+                                ! in_array(auth()->user()->management, ['admin', 'track_express'])
+                                && $record->status !== 'pickup_request'
+                            )
+                                ? 'You cannot edit order in this current state'
+                                : 'Edit this order',
+                            'style' => (
+                                ! in_array(auth()->user()->management, ['admin', 'track_express'])
+                                && $record->status !== 'pickup_request'
+                            )
+                                ? 'cursor:not-allowed; opacity:0.6; pointer-events:auto;'
+                                : '',
+                        ])
+                        ->action(function ($record) {
+                            $user = auth()->user();
 
-                        $user = auth()->user();
+                            // Admin and Track Express can always edit.
+                            if (in_array($user->management, ['admin', 'track_express'])) {
+                                return redirect(static::getUrl('edit', ['record' => $record]));
+                            }
 
-                        // ✅ Admin + Track Express can always edit
-                        if (in_array($user->management, ['admin', 'track_express'])) {
+                            // Other users can edit only pickup requests.
+                            if ($record->status !== 'pickup_request') {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('You cannot edit order in this current state')
+                                    ->warning()
+                                    ->send();
+
+                                return;
+                            }
+
                             return redirect(static::getUrl('edit', ['record' => $record]));
-                        }
+                        }),
 
-                        // ❌ Others restricted
-                        if ($record->status !== 'pickup_request') {
-                            \Filament\Notifications\Notification::make()
-                                ->title('You cannot edit order in this current state')
-                                ->warning()
-                                ->send();
+                    Tables\Actions\DeleteAction::make()
+                        ->visible(fn () => auth()->user()?->management !== 'track_express'),
 
-                            return;
-                        }
+                    Tables\Actions\Action::make('track')
+                        ->label('Order Tracking')
+                        ->icon('heroicon-o-map-pin')
+                        ->color('info')
+                        ->url(fn (Order $record): string => route('track.form', [
+                            'waybill' => $record->waybill_number,
+                        ]))
+                        ->openUrlInNewTab(),
 
-                        return redirect(static::getUrl('edit', ['record' => $record]));
-                    }),
+                    Tables\Actions\Action::make('exchange_order')
+                        ->label('Exchange Order')
+                        ->icon('heroicon-o-arrow-path-rounded-square')
+                        ->color('warning')
+                        ->url(fn ($record) => static::getUrl('create', [
+                            'duplicate_from' => $record->id,
+                            'service_type' => 'replacement',
+                        ])),
 
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn () => auth()->user()?->management !== 'track_express'),
-
-                Tables\Actions\Action::make('track')
-                    ->label('Order Tracking')
-                    ->icon('heroicon-o-map-pin')
-                    ->color('info')
-                    ->url(fn (Order $record): string => route('track.form', ['waybill' => $record->waybill_number]))
-                    ->openUrlInNewTab(),
+                    Tables\Actions\Action::make('refund_order')
+                        ->label('Refund Order')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('danger')
+                        ->url(fn ($record) => static::getUrl('create', [
+                            'duplicate_from' => $record->id,
+                            'service_type' => 'refund',
+                        ])),
+                ])
+                    ->label('')
+                    ->icon('heroicon-m-ellipsis-vertical')
+                    ->color('primary')
+                    ->extraAttributes([
+                        'class' => '!bg-transparent !shadow-none !border-0 !ring-0 !p-0',
+                        'style' => 'background: transparent !important; box-shadow: none !important; border: none !important;',
+                    ]),
             ])
 
             ->bulkActions([

@@ -21,6 +21,89 @@ class CreateOrder extends CreateRecord
         return $this->getResource()::getUrl('index');
     }
 
+    public function mount(): void
+    {
+        parent::mount();
+
+        $sourceOrderId = request()->query('duplicate_from');
+
+        if (! $sourceOrderId) {
+            return;
+        }
+
+        $sourceOrder = \App\Models\Order::findOrFail($sourceOrderId);
+
+        // Copy the original order's database fields.
+        $data = $sourceOrder->attributesToArray();
+
+        // Remove fields that must be generated for the new order.
+        unset(
+            $data['id'],
+            $data['created_at'],
+            $data['updated_at']
+        );
+
+        // Get the requested service type.
+        $serviceType = request()->query('service_type');
+
+        if (in_array($serviceType, ['replacement', 'refund'], true)) {
+            $data['service_type'] = $serviceType;
+
+            // Both Exchange and Refund orders start as pickup requests.
+            $data['status'] = 'pickup_request';
+
+            // Both orders start with quantity 1.
+            $data['quantity'] = 1;
+        }
+
+        $userId = $data['users_id'] ?? null;
+        $areaId = $data['area_id'] ?? null;
+
+        // Find the area using the user's branch.
+        $branchId = \App\Models\User::find($userId)?->branch_id;
+
+        if ($branchId == 2) {
+            $area = \App\Models\AreaTier1::find($areaId);
+        } elseif ($branchId == 4) {
+            $area = \App\Models\AreaTier2::find($areaId);
+        } else {
+            $area = \App\Models\Area::find($areaId);
+        }
+
+        // Exchange order.
+        if ($serviceType === 'replacement') {
+            if ($area) {
+                $exchangeCost = (float) $area->exchange_cost;
+
+                $data['delivery_cost'] = $exchangeCost;
+                $data['cod_amount'] = $exchangeCost;
+                $data['return_cost'] = $area->return_cost;
+                $data['city_id'] = $area->city_id;
+            } else {
+                $data['delivery_cost'] = 0;
+                $data['cod_amount'] = 0;
+            }
+        }
+
+        // Refund order.
+        elseif ($serviceType === 'refund') {
+            // Preserve the original COD amount but make it negative.
+            $data['cod_amount'] = -abs(
+                (float) ($data['cod_amount'] ?? 0)
+            );
+
+            // Use the area's exchange cost for the refund delivery fee.
+            if ($area) {
+                $data['delivery_cost'] = (float) $area->exchange_cost;
+                $data['return_cost'] = $area->return_cost;
+                $data['city_id'] = $area->city_id;
+            }
+        }
+
+        // Populate the Create Order form.
+        $this->form->fill($data);
+    }
+
     protected function afterCreate(): void
     {
         $order = $this->record;
