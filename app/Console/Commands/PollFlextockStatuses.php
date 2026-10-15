@@ -347,11 +347,7 @@ class PollFlextockStatuses extends Command
                 ? 'success_delivery'
                 : null,
 
-            'returned to origin' => match ($subStatus) {
-                'stocked' => 'returned_to_warehouse',
-                'handed to merchant' => 'returned_to_shipper',
-                default => null,
-            },
+            'returned to origin' => 'undelivered',
 
             'canceled', 'cancelled' => 'undelivered',
 
