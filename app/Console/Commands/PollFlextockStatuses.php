@@ -148,6 +148,53 @@ class PollFlextockStatuses extends Command
                         continue;
                     }
 
+                    // Save Flextock courier tracking details independently of order status.
+                    $courierName = $row['courier_name'] ?? null;
+                    $trackingNumber = $row['tracking_number'] ?? null;
+                    $trackingUrl = $row['tracking_url'] ?? null;
+
+                    // Preserve existing values when Flextock omits or returns null metadata.
+                    $courierName = is_string($courierName) && trim($courierName) !== ''
+                        ? trim($courierName)
+                        : $order->flextock_courier_name;
+
+                    $trackingNumber = is_string($trackingNumber) && trim($trackingNumber) !== ''
+                        ? trim($trackingNumber)
+                        : $order->courier_tracking_number;
+
+                    $trackingUrl = is_string($trackingUrl) && trim($trackingUrl) !== ''
+                        ? trim($trackingUrl)
+                        : $order->courier_tracking_url;
+
+                    $metadataChanged = false;
+
+                    if ($order->flextock_courier_name !== $courierName) {
+                        $order->flextock_courier_name = $courierName;
+                        $metadataChanged = true;
+                    }
+
+                    if ($order->courier_tracking_number !== $trackingNumber) {
+                        $order->courier_tracking_number = $trackingNumber;
+                        $metadataChanged = true;
+                    }
+
+                    if ($order->courier_tracking_url !== $trackingUrl) {
+                        $order->courier_tracking_url = $trackingUrl;
+                        $metadataChanged = true;
+                    }
+
+                    if ($metadataChanged) {
+                        $order->save();
+
+                        Log::info('Flextock courier tracking details synchronized', [
+                            'order_id' => $order->id,
+                            'waybill_number' => $order->waybill_number,
+                            'courier_name' => $courierName,
+                            'tracking_number' => $trackingNumber,
+                            'tracking_url' => $trackingUrl,
+                        ]);
+                    }
+
                     $flextockStatus = $row['order_status']
                         ?? $row['status']
                         ?? null;
@@ -347,7 +394,7 @@ class PollFlextockStatuses extends Command
                         'shopifyOrderId' => $order->order_id,
                         'trackingNumber' => $order->waybill_number,
                         'trackingCompany' => 'LYNK',
-                        'trackingUrl' => 'https://www.d2d-dashboard.com/admin/track?waybill='.
+                        'trackingUrl' => 'https://dashboard.lynk-eg.com/admin/track?waybill='.
                             urlencode($order->waybill_number),
                         'notifyCustomer' => true,
                     ]],

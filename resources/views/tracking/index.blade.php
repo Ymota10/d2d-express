@@ -257,6 +257,40 @@
             </div>
         </div>
 
+        {{-- COURIER TRACKING --}}
+        <div id="courierTracking" class="hidden mb-8 p-4 border border-line rounded-sm bg-paper">
+            <p class="font-mono text-[10px] tracking-[0.15em] text-slate uppercase mb-3">
+                Delivery Partner
+            </p>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <p id="courierName" class="text-base font-semibold text-ink"></p>
+
+                    <p class="text-xs text-slate mt-1">
+                        Courier Tracking Number:
+                        <span id="courierTrackingNumber" class="font-mono text-ink"></span>
+                    </p>
+                </div>
+
+                <a
+                    id="courierTrackingLink"
+                    href="#"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="hidden inline-flex items-center justify-center gap-2 px-4 py-2 bg-ink text-white rounded-sm font-mono text-xs uppercase tracking-wide hover:bg-ink2 transition-colors"
+                >
+                    Track with Courier
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2">
+                        <path d="M14 3h7v7"/>
+                        <path d="M10 14L21 3"/>
+                        <path d="M21 14v7H3V3h7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
         {{-- ROUTE --}}
         <div class="relative mb-14 px-2">
             <div class="route-track">
@@ -342,6 +376,32 @@ function trackOrder() {
             error.classList.add('hidden');
 
             let order = data.order;
+            
+            // COURIER TRACKING DETAILS
+            const courierTracking = data.courier_tracking ?? {};
+            const courierSection = document.getElementById('courierTracking');
+            const courierName = document.getElementById('courierName');
+            const courierNumber = document.getElementById('courierTrackingNumber');
+            const courierLink = document.getElementById('courierTrackingLink');
+
+            courierSection.classList.add('hidden');
+            courierLink.classList.add('hidden');
+            courierLink.removeAttribute('href');
+
+            if (courierTracking.courier_name) {
+                courierName.innerText = courierTracking.courier_name;
+                courierNumber.innerText = courierTracking.tracking_number || '-';
+
+                courierSection.classList.remove('hidden');
+
+                if (
+                    courierTracking.tracking_url &&
+                    courierTracking.tracking_url.startsWith('https://')
+                ) {
+                    courierLink.href = courierTracking.tracking_url;
+                    courierLink.classList.remove('hidden');
+                }
+            }
             document.getElementById('waybillText').innerText = order.waybill_number ?? '-';
             document.getElementById('receiverName').innerText = order.receiver_name ?? '-';
             document.getElementById('receiverMobile').innerText = order.receiver_mobile_1 ?? '-';
