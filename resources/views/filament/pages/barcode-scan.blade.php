@@ -62,76 +62,90 @@
 
                         <tbody>
 
-                            @foreach($orders as $order)
+@php
+    $seenWaybills = [];
+@endphp
 
-                                <tr class="{{ in_array($order['waybill_number'], $duplicates) 
-                                    ? 'bg-red-100 dark:bg-red-700' 
-                                    : 'bg-green-100 dark:bg-green-700' }}">
+@foreach($orders as $order)
 
-                                    <!-- Waybill -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['waybill_number'] }}
-                                    </td>
+    @php
+        $waybill = $order['waybill_number'];
 
-                                    <!-- Order ID -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['order_id'] }}
-                                    </td>
+        // count occurrences
+        $seenWaybills[$waybill] = ($seenWaybills[$waybill] ?? 0) + 1;
 
-                                    <!-- Consignee -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['receiver_name'] ?? 'N/A' }}
-                                    </td>
+        // only duplicates AFTER first occurrence become red
+        $isDuplicate = $seenWaybills[$waybill] > 1;
+    @endphp
 
-                                    <!-- Mobile -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['receiver_mobile_1'] ?? 'N/A' }}
-                                    </td>
+    <tr class="{{ $isDuplicate
+        ? 'bg-red-100 dark:bg-red-700'
+        : 'bg-green-100 dark:bg-green-700' }}">
 
-                                    <!-- Item Name -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['item_name'] ?? 'N/A' }}
-                                    </td>
+        <!-- Waybill -->
+        <td class="px-4 py-2">
+            {{ $order['waybill_number'] }}
+        </td>
 
-                                    <!-- Shipper -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['user']['name'] ?? 'N/A' }}
-                                    </td>
+        <!-- Order ID -->
+        <td class="px-4 py-2">
+            {{ $order['order_id'] }}
+        </td>
 
-                                    <!-- Status -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['status'] }}
-                                    </td>
+        <!-- Consignee -->
+        <td class="px-4 py-2">
+            {{ $order['receiver_name'] ?? 'N/A' }}
+        </td>
 
-                                    <!-- Area -->
-                                    <td class="px-4 py-2">
-                                        {{ $order['area']['name'] ?? 'N/A' }}
-                                    </td>
+        <!-- Mobile -->
+        <td class="px-4 py-2">
+            {{ $order['receiver_mobile_1'] ?? 'N/A' }}
+        </td>
 
-                                    <!-- COD -->
-                                    <td class="px-4 py-2">
-                                        {{ number_format($order['cod_amount'], 2) }}
-                                    </td>
+        <!-- Item Name -->
+        <td class="px-4 py-2">
+            {{ $order['item_name'] ?? 'N/A' }}
+        </td>
 
-                                    <!-- Remove -->
-                                    <td class="px-4 py-2 text-center">
+        <!-- Shipper -->
+        <td class="px-4 py-2">
+            {{ $order['user']['name'] ?? 'N/A' }}
+        </td>
 
-                                        <x-filament::button
-                                            color="danger"
-                                            size="sm"
-                                            wire:click="remove('{{ $order['id'] }}')"
-                                            wire:loading.attr="disabled"
-                                        >
-                                            Remove
-                                        </x-filament::button>
+        <!-- Status -->
+        <td class="px-4 py-2">
+            {{ $order['status'] }}
+        </td>
 
-                                    </td>
+        <!-- Area -->
+        <td class="px-4 py-2">
+            {{ $order['area']['name'] ?? 'N/A' }}
+        </td>
 
-                                </tr>
+        <!-- COD -->
+        <td class="px-4 py-2">
+            {{ number_format($order['cod_amount'], 2) }}
+        </td>
 
-                            @endforeach
+        <!-- Remove -->
+        <td class="px-4 py-2 text-center">
 
-                        </tbody>
+            <x-filament::button
+                color="danger"
+                size="sm"
+                wire:click="remove('{{ $order['id'] }}')"
+                wire:loading.attr="disabled"
+            >
+                Remove
+            </x-filament::button>
+
+        </td>
+
+    </tr>
+
+@endforeach
+
+</tbody>
 
                     </table>
 
