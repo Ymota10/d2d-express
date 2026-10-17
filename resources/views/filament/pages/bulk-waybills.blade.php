@@ -191,18 +191,6 @@
 <div class="top-row">
     <div class="barcode-block">
 
-        <!-- Existing QR code: unchanged -->
-        <div class="qr-item">
-            <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($order->waybill_number ?? '123456789') }}"
-                alt="QR Code"
-            >
-
-            <div class="number">
-                {{ $order->waybill_number ?? '123456789' }}
-            </div>
-        </div>
-
         <!-- Flextock QR code: admin users only -->
         @if (auth()->user()?->isAdmin())
             <div class="qr-item">

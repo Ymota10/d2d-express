@@ -105,7 +105,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label('Finance'),
                 NavigationGroup::make()->label('Warehousing'),
                 NavigationGroup::make()->label('Settings'),
-                NavigationGroup::make()->label('External'),
+                // NavigationGroup::make()->label('External'),
             ])
 
             ->navigationItems([

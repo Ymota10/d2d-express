@@ -413,6 +413,8 @@ class OrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->paginated([10, 20, 50, 100, 200])
+            ->defaultPaginationPageOption(20)
             ->columns([
 
                 Tables\Columns\TextColumn::make('waybill_number')
@@ -491,6 +493,68 @@ class OrderResource extends Resource
                             default => 'secondary',
                         };
                     }),
+
+                Tables\Columns\TextColumn::make('flextock_courier_name')
+                    ->label('Delivery Partner')
+                    ->html()
+                    ->formatStateUsing(function (?string $state): string {
+                        if (blank($state)) {
+                            return '<span style="color:#9CA3AF;">Not assigned</span>';
+                        }
+
+                        $key = strtolower(trim($state));
+
+                        $couriers = [
+                            'aramex' => 'Aramex_logo.png',
+
+                            'egyptpost' => 'bareed-post-removebg-preview.png',
+
+                            'shipblu' => 'shipblu_logo-removebg-preview.png',
+
+                            'jt express' => 'jt_logo-removebg-preview.png',
+
+                            'fx-jd-express' => 'jdlogo-removebg-preview.png',
+                            'fx-jd-express(zet)' => 'jdlogo-removebg-preview.png',
+
+                            'mylerz' => 'mylerzzzzzzz-removebg-preview.png',
+
+                            'pdc' => 'pdc_logo-removebg-preview.png',
+                        ];
+
+                        // Use the matching courier logo, or Flextock for other partners.
+                        $logo = $couriers[$key] ?? 'flexess-removebg-preview.png';
+
+                        $url = asset('images/'.rawurlencode($logo));
+
+                        return '
+        <div style="
+            width:76px;
+            height:56px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:4px;
+            background:transparent;
+            box-sizing:border-box;
+        ">
+            <img
+                src="'.e($url).'"
+                alt="'.e($state).'"
+                style="
+                    display:block;
+                    width:100%;
+                    height:100%;
+                    object-fit:contain;
+                    background:transparent;
+                    border:0;
+                    box-shadow:none;
+                "
+            >
+        </div>
+    ';
+                    })
+                    ->searchable()
+                    ->sortable(),
 
                 Tables\Columns\BadgeColumn::make('attempts_visual')
                     ->label('Attempts')
