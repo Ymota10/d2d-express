@@ -80,7 +80,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandLogo(asset('images/lynk_normal_logo-removebg-preview.png'))
             ->brandLogoHeight('130px')
-            ->favicon('images/lynk normal logo.jpeg')
+            ->favicon(asset('images/lynk normal logo.jpeg'))
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn (): string => new HtmlString('
@@ -108,13 +108,13 @@ class AdminPanelProvider extends PanelProvider
                 // NavigationGroup::make()->label('External'),
             ])
 
-            ->navigationItems([
-                NavigationItem::make('Our Website')
-                    ->url('https://d2d-express-eg.com', shouldOpenInNewTab: true)
-                    ->icon('heroicon-o-tv')
-                    ->group('External')
-                    ->sort(10),
-            ])
+            // ->navigationItems([
+            //     NavigationItem::make('Our Website')
+            //         ->url('https://d2d-express-eg.com', shouldOpenInNewTab: true)
+            //         ->icon('heroicon-o-tv')
+            //         ->group('External')
+            //         ->sort(10),
+            // ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
