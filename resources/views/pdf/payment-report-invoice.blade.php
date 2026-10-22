@@ -301,15 +301,23 @@
                 </td>
 
                 <td class="lbl">
+                    Transfer Fee
+                </td>
+
+                <td class="val">
+                    {{ number_format($paymentReport->transfer_fee ?? 0, 2) }} EGP
+                </td>
+            </tr>
+
+            <tr>
+                <td class="lbl">
                     Open Package Fees
                 </td>
 
                 <td class="val">
                     {{ number_format($paymentReport->total_open_package_fees ?? 0, 2) }} EGP
                 </td>
-            </tr>
 
-            <tr class="final">
                 <td class="lbl">
                     Extra Fees
                 </td>
@@ -317,12 +325,14 @@
                 <td class="val">
                     {{ number_format($paymentReport->extra_fees ?? 0, 2) }} EGP
                 </td>
+            </tr>
 
-                <td class="lbl">
+            <tr class="final">
+                <td class="lbl" colspan="2">
                     Final Amount
                 </td>
 
-                <td class="val">
+                <td class="val" colspan="2">
                     {{ number_format($paymentReport->final_amount ?? 0, 2) }} EGP
                 </td>
             </tr>
@@ -431,7 +441,7 @@
 
                     <td class="number">
                         @if($order->status === 'undelivered')
-                            -
+                            {{ number_format($order->return_cost ?? 0, 2) }}
                         @else
                             {{ number_format($order->delivery_cost ?? 0, 2) }}
                         @endif
@@ -466,16 +476,44 @@
 
             <tr>
                 <td class="label">
-                    Total Delivery Fees
+                    Total Delivery / Return Fees
                 </td>
 
                 <td class="number">
-                    {{ number_format($orders->sum('delivery_cost'), 2) }} EGP
+                    {{
+                        number_format(
+                            $orders->sum(fn ($order) =>
+                                $order->status === 'undelivered'
+                                    ? ($order->return_cost ?? 0)
+                                    : ($order->delivery_cost ?? 0)
+                            ),
+                            2
+                        )
+                    }} EGP
+                </td>
+            </tr>
+
+            <tr>
+                <td class="label">
+                    Insurance Fees
+                </td>
+
+                <td class="number">
+                    {{ number_format($orders->sum('insurance_fee'), 2) }} EGP
+                </td>
+            </tr>
+
+            <tr>
+                <td class="label">
+                    Transfer Fee
+                </td>
+
+                <td class="number">
+                    25.00 EGP
                 </td>
             </tr>
 
             <tr class="total">
-
                 <td>
                     Net Amount
                 </td>
@@ -484,12 +522,17 @@
                     {{
                         number_format(
                             $orders->sum('cod_amount')
-                            - $orders->sum('delivery_cost'),
+                            - $orders->sum(fn ($order) =>
+                                $order->status === 'undelivered'
+                                    ? ($order->return_cost ?? 0)
+                                    : ($order->delivery_cost ?? 0)
+                            )
+                            - $orders->sum('insurance_fee')
+                            - 25,
                             2
                         )
                     }} EGP
                 </td>
-
             </tr>
 
         </table>

@@ -72,10 +72,19 @@ class PaymentReportResource extends Resource
                     ->money('EGP')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('transfer_fee')
+                    ->label(new \Illuminate\Support\HtmlString(
+                        'Transfer Fee <span title="A fixed transfer fee of 25 EGP is deducted from each collection."
+                        style="display:inline-flex;align-items:center;justify-content:center;
+                        width:15px;height:15px;border:1px solid currentColor;border-radius:50%;
+                        font-size:10px;font-weight:600;cursor:help;margin-left:4px;">i</span>'
+                    ))
+                    ->money('EGP')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('extra_fees')
                     ->label('Extra Fees')
                     ->money('EGP')
-                    ->description('Minimum 20 EGP deducted per transaction')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('final_amount')

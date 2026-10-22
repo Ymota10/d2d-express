@@ -522,23 +522,32 @@ class FinancialAnalysisResource extends Resource
                                         ).' EGP'
                                     ),
 
-                                Forms\Components\Radio::make(
-                                    'extra_type'
-                                )
-                                    ->label('Extra Fees Type')
-                                    ->options([
-                                        'fixed' => 'Fixed Amount',
-                                        'percent' => 'Percentage of COD',
-                                        'none' => 'No Extra Fees',
-                                    ])
-                                    ->default('none'),
+                                Forms\Components\Placeholder::make('transfer_fee')
+                                    ->label('Transfer Fee')
+                                    ->content('25.00 EGP'),
 
-                                Forms\Components\TextInput::make(
-                                    'extra_value'
-                                )
-                                    ->label('Extra Value')
+                                Forms\Components\Radio::make('extra_type')
+                                    ->label('Extra Fees Calculation')
+                                    ->options([
+                                        'percent' => 'Deduct Percentage of COD',
+                                        'fixed' => 'Deduct Fixed Amount (EGP)',
+                                        'none' => 'No Extra Deduction',
+                                    ])
+                                    ->default('none')
+                                    ->live(),
+
+                                Forms\Components\TextInput::make('extra_value')
+                                    ->label(fn (Forms\Get $get) => match ($get('extra_type')) {
+                                        'percent' => 'Percentage to Deduct (%)',
+                                        'fixed' => 'Fixed Amount to Deduct (EGP)',
+                                        default => 'Extra Value',
+                                    })
                                     ->numeric()
-                                    ->default(0),
+                                    ->minValue(0)
+                                    ->default(0)
+                                    ->visible(fn (Forms\Get $get) => $get('extra_type') !== 'none')
+                                    ->required(fn (Forms\Get $get) => $get('extra_type') !== 'none'),
+
                             ];
                         })
                         ->action(function ($records, array $data) {
@@ -568,32 +577,25 @@ class FinancialAnalysisResource extends Resource
                             $totalInsurance =
                                 $records->sum('insurance_fee');
 
-                            $extra = 0;
+                            $extraType = $data['extra_type'] ?? 'none';
+                            $extraValue = (float) ($data['extra_value'] ?? 0);
 
-                            if (
-                                $data['extra_type'] === 'fixed'
-                            ) {
-                                $extra =
-                                    (float) $data['extra_value'];
+                            $extra = match ($extraType) {
+                                'fixed' => $extraValue,
+                                'percent' => $totalCod * ($extraValue / 100),
+                                default => 0,
+                            };
 
-                            } elseif (
-                                $data['extra_type'] === 'percent'
-                            ) {
-                                $extra =
-                                    $totalCod *
-                                    (
-                                        (float)
-                                        $data['extra_value'] /
-                                        100
-                                    );
-                            }
+                            // NEW: Fixed transfer fee
+                            $transferFee = 25.00;
 
                             $finalAmount =
                                 $totalCod
                                 - $totalShipping
                                 // - $openPackageFees
                                 - $totalInsurance
-                                - $extra;
+                                - $extra
+                                - $transferFee;
 
                             $shipperId =
                                 $records->first()?->shipper_id;
@@ -615,6 +617,9 @@ class FinancialAnalysisResource extends Resource
                                 // 'total_open_package_fees' => $openPackageFees,
 
                                 'total_insurance_fees' => $totalInsurance,
+
+                                // NEW: Save transfer fee separately
+                                'transfer_fee' => $transferFee,
 
                                 'extra_fees' => $extra,
 

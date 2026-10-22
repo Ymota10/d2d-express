@@ -18,6 +18,7 @@ class PaymentReport extends Model
         'total_insurance_fees',
         'is_transferred',
         'transaction_reference_number',
+        'transfer_fee',
 
     ];
 
