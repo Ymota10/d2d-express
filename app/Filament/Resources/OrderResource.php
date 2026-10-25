@@ -1008,11 +1008,11 @@ class OrderResource extends Resource
                                     );
                                 }
 
-                                if (! empty($order->receiver_name)) {
-                                    $order->receiver_name = $Arabic->utf8Glyphs(
-                                        $order->receiver_name
-                                    );
-                                }
+                                // if (! empty($order->receiver_name)) {
+                                //     $order->receiver_name = $Arabic->utf8Glyphs(
+                                //         $order->receiver_name
+                                //     );
+                                // }
 
                                 return $order;
                             });
@@ -1141,11 +1141,11 @@ class OrderResource extends Resource
                                     );
                                 }
 
-                                if (! empty($order->receiver_name)) {
-                                    $order->receiver_name = $Arabic->utf8Glyphs(
-                                        $order->receiver_name
-                                    );
-                                }
+                                // if (! empty($order->receiver_name)) {
+                                //     $order->receiver_name = $Arabic->utf8Glyphs(
+                                //         $order->receiver_name
+                                //     );
+                                // }
 
                                 return $order;
                             });

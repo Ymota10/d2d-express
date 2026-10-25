@@ -155,6 +155,7 @@
 
 @php
     use ArPHP\I18N\Arabic;
+
     $arabic = new Arabic();
 @endphp
 
@@ -162,6 +163,8 @@
 
 
 @php
+    // Convert Arabic text for PDF display only.
+    // Never save these converted values back to the database.
     $convertArabic = function ($value) use ($arabic, $order) {
         $value = (string) ($value ?? '');
 
@@ -169,28 +172,18 @@
             return '';
         }
 
-        // Remove Arabic combining marks that may break ArPHP glyph conversion.
-        $normalized = preg_replace(
-            '/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}]/u',
-            '',
-            $value
-        );
-
-        $normalized = $normalized ?? $value;
-
         try {
-            return $arabic->utf8Glyphs($normalized);
+            return $arabic->utf8Glyphs($value);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning(
                 'Bulk waybill Arabic conversion failed.',
                 [
                     'order_id' => $order->id,
-                    'value' => $value,
                     'error' => $e->getMessage(),
                 ]
             );
 
-            // Keep the original text if glyph conversion fails.
+            // Escape the original text if conversion fails.
             return e($value);
         }
     };
