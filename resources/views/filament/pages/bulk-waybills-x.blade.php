@@ -160,12 +160,46 @@
 
 @foreach ($orders as $order)
 
+
 @php
-    $receiverName = $arabic->utf8Glyphs($order->receiver_name ?? '');
-    $receiverAddress = $arabic->utf8Glyphs($order->receiver_address ?? '');
-    $areaName = $arabic->utf8Glyphs($order->area->name ?? '');
-    $cityName = $arabic->utf8Glyphs($order->city->name ?? '');
-    $shipperName = $arabic->utf8Glyphs($order->user->name ?? '');
+    $convertArabic = function ($value) use ($arabic, $order) {
+        $value = (string) ($value ?? '');
+
+        if ($value === '') {
+            return '';
+        }
+
+        // Remove Arabic combining marks that may break ArPHP glyph conversion.
+        $normalized = preg_replace(
+            '/[\x{064B}-\x{065F}\x{0670}\x{06D6}-\x{06ED}]/u',
+            '',
+            $value
+        );
+
+        $normalized = $normalized ?? $value;
+
+        try {
+            return $arabic->utf8Glyphs($normalized);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                'Bulk waybill Arabic conversion failed.',
+                [
+                    'order_id' => $order->id,
+                    'value' => $value,
+                    'error' => $e->getMessage(),
+                ]
+            );
+
+            // Keep the original text if glyph conversion fails.
+            return e($value);
+        }
+    };
+
+    $shipperName = $convertArabic($order->user?->name);
+    $receiverName = $convertArabic($order->receiver_name);
+    $receiverAddress = $convertArabic($order->receiver_address);
+    $areaName = $convertArabic($order->area?->name);
+    $cityName = $convertArabic($order->city?->name);
 @endphp
 
 <div class="waybill">
