@@ -431,10 +431,31 @@ class SyncOrdersController extends Controller
             */
             $isFullyPaid = (bool) ($shopifyOrder['fullyPaid'] ?? false);
 
+            $shopifyTotal = (float) ($shopifyOrder['totalPrice'] ?? 0);
+            $shippingFees = (float) ($order->delivery_cost ?? 0);
+
+            // Handle fully paid Shopify orders whose totalPrice is zero.
+            $paidAmount = $shopifyTotal;
+
+            if ($isFullyPaid && $paidAmount <= 0 && $shippingFees > 0) {
+                $paidAmount = $shippingFees;
+            }
+
+            Log::info('Flextock payment calculation', [
+                'd2d_order_id' => $order->id,
+                'waybill_number' => $order->waybill_number,
+                'shopify_order_id' => $shopifyOrder['id'] ?? null,
+                'fully_paid' => $isFullyPaid,
+                'shopify_total' => $shopifyTotal,
+                'delivery_cost' => $shippingFees,
+                'cod_amount' => (float) ($order->cod_amount ?? 0),
+                'calculated_paid_amount' => $paidAmount,
+            ]);
+
             $paymentData = [
                 [
                     'value' => $isFullyPaid
-                        ? (float) ($shopifyOrder['totalPrice'] ?? 0)
+                        ? $paidAmount
                         : (float) ($order->cod_amount ?? 0),
 
                     'payment_type' => $isFullyPaid
@@ -442,7 +463,7 @@ class SyncOrdersController extends Controller
                         : 'cash_on_delivery',
 
                     'payment_method' => $isFullyPaid
-                        ? ($shopifyOrder['paymentGatewayNames'][0] ?? 'online')
+                        ? (($shopifyOrder['paymentGatewayNames'][0] ?? null) ?: 'online')
                         : null,
 
                     'payment_reference' => $isFullyPaid
@@ -467,9 +488,6 @@ class SyncOrdersController extends Controller
             | Quantity = 1
             | Price    = 999
             */
-            $shopifyTotal = (float) ($shopifyOrder['totalPrice'] ?? 0);
-            $shippingFees = (float) ($order->delivery_cost ?? 0);
-
             $lineItemPrice = max(0, $shopifyTotal - $shippingFees);
 
             $lineItems = [
