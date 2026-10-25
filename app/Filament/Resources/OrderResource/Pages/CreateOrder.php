@@ -168,18 +168,30 @@ class CreateOrder extends CreateRecord
             | PAYMENT DATA
             |--------------------------------------------------------------------------
             |
-            | Manual orders are treated as COD when cod_amount > 0.
-            | Otherwise, they are sent as prepaid.
+            | Preserve the existing manual COD behavior.
+            | For non-COD orders, use the delivery fee as a fallback
+            | when the calculated paid amount is zero.
             |
             */
             $codAmount = (float) ($order->cod_amount ?? 0);
+            $shippingFees = (float) ($order->delivery_cost ?? 0);
+
             $isCod = $codAmount > 0;
+
+            // Manual orders with positive COD retain their existing behavior.
+            // For non-COD orders, calculate the item/paid amount using the
+            // same zero-total fallback as the Shopify integration.
+            $paidAmount = $isCod ? 0 : $codAmount;
+
+            if (! $isCod && $paidAmount <= 0 && $shippingFees > 0) {
+                $paidAmount = $shippingFees;
+            }
 
             $paymentData = [
                 [
                     'value' => $isCod
                         ? $codAmount
-                        : 0,
+                        : $paidAmount,
 
                     'payment_type' => $isCod
                         ? 'cash_on_delivery'
@@ -199,14 +211,10 @@ class CreateOrder extends CreateRecord
             |--------------------------------------------------------------------------
             | LINE ITEM
             |--------------------------------------------------------------------------
-            |
-            | Uses the same fixed Flextock SKU as Shopify integration.
-            |
             */
-            $lineItemPrice = max(
-                0,
-                $codAmount - (float) ($order->delivery_cost ?? 0)
-            );
+            $lineItemPrice = $isCod
+                ? max(0, $codAmount - $shippingFees)
+                : max(0, $paidAmount - $shippingFees);
 
             $lineItems = [
                 [
