@@ -65,7 +65,7 @@ class TodaysDeliveryPerformance extends DoughnutChartWidget
 
         $statusData = [
             'pickup_request' => [
-                'label' => 'Pickup Request',
+                'label' => 'New',
                 'count' => $orders['pickup_request'] ?? 0,
                 'color' => '#FFD700', // Yellow
             ],
@@ -94,9 +94,9 @@ class TodaysDeliveryPerformance extends DoughnutChartWidget
                 'color' => '#DC2626', // Red
             ],
 
-            'time_scheduled' => [
-                'label' => 'Time Scheduled',
-                'count' => $orders['time_scheduled'] ?? 0,
+            'in_progress' => [
+                'label' => 'In Progress',
+                'count' => $orders['in_progress'] ?? 0,
                 'color' => '#800080', // Purple
             ],
 

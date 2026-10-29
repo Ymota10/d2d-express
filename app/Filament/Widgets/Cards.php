@@ -56,10 +56,15 @@ class Cards extends BaseWidget
          * updated today, instead of the lifetime total.
          */
 
-        // Today's orders based on Cairo time
-        $today = now('Africa/Cairo')->toDateString();
+        // Today's orders based on Cairo time.
+        // Convert the Cairo day boundaries to UTC for database timestamps.
+        $cairoNow = now('Africa/Cairo');
 
-        $orderQuery->whereDate('updated_at', $today);
+        $startOfToday = $cairoNow->copy()->startOfDay()->utc();
+        $startOfTomorrow = $cairoNow->copy()->addDay()->startOfDay()->utc();
+        $orderQuery
+            ->where('updated_at', '>=', $startOfToday)
+            ->where('updated_at', '<', $startOfTomorrow);
         /*
          * ============================================================
          * ORDER STATUS COUNTS
@@ -78,8 +83,8 @@ class Cards extends BaseWidget
             ->where('status', 'out_for_delivery')
             ->count();
 
-        $timeScheduled = (clone $orderQuery)
-            ->where('status', 'time_scheduled')
+        $inProgress = (clone $orderQuery)
+            ->where('status', 'in_progress')
             ->count();
 
         $returnedToWarehouse = (clone $orderQuery)
@@ -98,7 +103,8 @@ class Cards extends BaseWidget
             ->count();
 
         $collectedCashSales = Order::query()
-            ->whereDate('updated_at', $today)
+            ->where('updated_at', '>=', $startOfToday)
+            ->where('updated_at', '<', $startOfTomorrow)
             ->whereIn('status', ['success_delivery', 'partial_return']);
 
         if (! $user?->isAdmin()) {
@@ -190,8 +196,8 @@ class Cards extends BaseWidget
                 ]),
 
             Stat::make(
-                'Time Scheduled',
-                $timeScheduled
+                'In Progress',
+                $inProgress
             )
                 ->icon('heroicon-o-clock')
                 ->color('warning')
