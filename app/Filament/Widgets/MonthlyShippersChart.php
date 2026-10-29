@@ -54,6 +54,11 @@ class MonthlyShippersChart extends LineChartWidget
 
                     'fill' => true,
                     'tension' => 0.4,
+
+                    // Match MonthlyOrdersChart dot styling
+                    'pointBackgroundColor' => '#2563EB',
+                    'pointRadius' => 4,
+                    'pointHoverRadius' => 6,
                 ],
             ],
 

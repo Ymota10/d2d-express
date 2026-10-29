@@ -11,6 +11,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class Cards extends BaseWidget
 {
+    protected static ?string $pollingInterval = '30s';
+
     protected function getColumns(): int
     {
         return 4;
@@ -54,8 +56,10 @@ class Cards extends BaseWidget
          * updated today, instead of the lifetime total.
          */
 
-        $orderQuery->whereDate('updated_at', today());
+        // Today's orders based on Cairo time
+        $today = now('Africa/Cairo')->toDateString();
 
+        $orderQuery->whereDate('updated_at', $today);
         /*
          * ============================================================
          * ORDER STATUS COUNTS
@@ -94,11 +98,8 @@ class Cards extends BaseWidget
             ->count();
 
         $collectedCashSales = Order::query()
-            ->whereDate('updated_at', today())
-            ->whereIn('status', [
-                'success_delivery',
-                'partial_return',
-            ]);
+            ->whereDate('updated_at', $today)
+            ->whereIn('status', ['success_delivery', 'partial_return']);
 
         if (! $user?->isAdmin()) {
             $collectedCashSales->where('users_id', $user->id);

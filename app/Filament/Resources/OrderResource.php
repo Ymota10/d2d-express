@@ -333,13 +333,14 @@ class OrderResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->options([
-                                'pickup_request' => 'Pickup Request',
+                                'pickup_request' => 'New',
                                 'warehouse_received' => 'Warehouse Received',
                                 'out_for_delivery' => 'Out for Delivery',
                                 'success_delivery' => 'Successful Delivery',
                                 'partial_return' => 'Partial Delivery',
                                 'partial_return_2' => 'Partial Return',
                                 'time_scheduled' => 'Time Scheduled',
+                                'in_progress' => 'In Progress',
                                 'failed_attempt' => 'Failed Attempt',
                                 'undelivered' => 'Undelivered',
                                 'returned_and_cost_paid' => 'Returned and cost paid',
@@ -459,13 +460,14 @@ class OrderResource extends Resource
                     ->badge()
                     ->formatStateUsing(function (string $state): string {
                         return match ($state) {
-                            'pickup_request' => 'Pickup Request',
+                            'pickup_request' => 'New',
                             'warehouse_received' => 'Warehouse Received',
                             'out_for_delivery' => 'Out for Delivery',
                             'success_delivery' => 'Success Delivery',
                             'partial_return' => 'Partial Delivery',
                             'partial_return_2' => 'Partial Return',
                             'time_scheduled' => 'Time Scheduled',
+                            'in_progress' => 'In Progress',
                             'failed_attempt' => 'Failed Attempt',
                             'undelivered' => 'Undelivered',
                             'returned_and_cost_paid' => 'Returned and cost paid',
@@ -484,6 +486,7 @@ class OrderResource extends Resource
                             'partial_return' => 'orange', // green
                             'partial_return_2' => 'partialreturn',
                             'time_scheduled' => 'secondary',    // purple (requires custom theme if not default)
+                            'in_progress' => 'eighth',
                             'failed_attempt' => 'danger',       // red
                             'undelivered' => 'danger',       // red
                             'returned_and_cost_paid' => 'seven',
@@ -646,6 +649,28 @@ class OrderResource extends Resource
                         )
                     ),
 
+                // 📅 Updated At Date Range Filter (Admins Only)
+                Tables\Filters\Filter::make('updated_at_range')
+                    ->label('Updated At Date Range')
+                    ->visible(fn (): bool => auth()->user()?->management === 'admin')
+                    ->form([
+                        Forms\Components\DatePicker::make('from')
+                            ->label('From Date (Updated_at)'),
+
+                        Forms\Components\DatePicker::make('to')
+                            ->label('To Date (Updated_at)'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => $query
+                        ->when(
+                            $data['from'] ?? null,
+                            fn ($q, $date) => $q->whereDate('updated_at', '>=', $date)
+                        )
+                        ->when(
+                            $data['to'] ?? null,
+                            fn ($q, $date) => $q->whereDate('updated_at', '<=', $date)
+                        )
+                    ),
+
                 // 🔍 Filter by Shipper
                 Tables\Filters\SelectFilter::make('users_id')
                     ->label('Shipper')
@@ -656,13 +681,14 @@ class OrderResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
-                        'pickup_request' => 'Pickup Request',
+                        'pickup_request' => 'New',
                         'warehouse_received' => 'Warehouse Received',
                         'out_for_delivery' => 'Out for Delivery',
                         'success_delivery' => 'Successful Delivery',
                         'partial_return' => 'Partial Delivery',
                         'partial_return_2' => 'Partial Return',
                         'time_scheduled' => 'Time Scheduled',
+                        'in_progress' => 'In Progress',
                         'failed_attempt' => 'Failed Attempt',
                         'undelivered' => 'Undelivered',
                         'returned_and_cost_paid' => 'Returned and cost paid',
@@ -823,13 +849,14 @@ class OrderResource extends Resource
                                 Forms\Components\Select::make('status')
                                     ->label('Select New Status')
                                     ->options([
-                                        'pickup_request' => 'Pickup Request',
+                                        'pickup_request' => 'New',
                                         'warehouse_received' => 'Warehouse Received',
                                         'out_for_delivery' => 'Out for Delivery',
                                         'success_delivery' => 'Successful Delivery',
                                         'partial_return' => 'Partial Delivery',
                                         'partial_return_2' => 'Partial Return',
                                         'time_scheduled' => 'Time Scheduled',
+                                        'in_progress' => 'In Progress',
                                         'failed_attempt' => 'Failed Attempt',
                                         'undelivered' => 'Undelivered',
                                         'returned_and_cost_paid' => 'Returned and cost paid',

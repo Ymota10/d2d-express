@@ -49,7 +49,7 @@ class ListOrders extends ListRecords
             'all' => Tab::make('All')
                 ->badge(fn () => (clone $orderQuery)->count()),
 
-            'pickup_request' => Tab::make('Pickup Request')
+            'pickup_request' => Tab::make('New')
                 ->badge(fn () => (clone $orderQuery)
                     ->where('status', 'pickup_request')
                     ->count())
@@ -63,6 +63,14 @@ class ListOrders extends ListRecords
                     ->count())
                 ->modifyQueryUsing(
                     fn (Builder $query) => $query->where('status', 'warehouse_received')
+                ),
+
+            'in_progress' => Tab::make('In Progress')
+                ->badge(fn () => (clone $orderQuery)
+                    ->where('status', 'in_progress')
+                    ->count())
+                ->modifyQueryUsing(
+                    fn (Builder $query) => $query->where('status', 'in_progress')
                 ),
 
             'out_for_delivery' => Tab::make('Out for Delivery')

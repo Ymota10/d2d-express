@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Services\UndeliveredReasonAssigner;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +14,12 @@ class PollFlextockStatuses extends Command
     protected $signature = 'flextock:poll-statuses';
 
     protected $description = 'Synchronize local order statuses with Flextock';
+
+    public function __construct(
+        private readonly UndeliveredReasonAssigner $reasonAssigner
+    ) {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -68,6 +75,8 @@ class PollFlextockStatuses extends Command
                     'users_id',
                     'order_id',
                     'status',
+                    'undelivered_reason',
+
                 ]);
 
             if ($orders->isEmpty()) {
@@ -230,8 +239,15 @@ class PollFlextockStatuses extends Command
 
                     $oldStatus = $order->status;
                     $order->status = $mappedStatus;
-                    $order->save();
 
+                    // Assign a reason only when the order newly becomes undelivered.
+                    $this->reasonAssigner->assign(
+                        $order,
+                        $oldStatus,
+                        $mappedStatus
+                    );
+
+                    $order->save();
                     $this->syncShopify($order, $mappedStatus);
 
                     Log::info('Flextock order status synchronized', [
@@ -327,15 +343,14 @@ class PollFlextockStatuses extends Command
             'pending' => null,
             'ready' => null,
 
-            'processing' => match ($subStatus) {
-                '' => 'warehouse_received',
-                'rescheduled' => 'time_scheduled',
-                default => null,
-            },
+            // Flextock processing and fulfilled map to LYNK in_progress.
+            'processing', 'fulfilled' => 'in_progress',
 
-            'fulfilled', 'received at fc' => 'warehouse_received',
+            // Flextock statuses that map to warehouse_received.
+            'picked by driver', 'received at fc' => 'warehouse_received',
 
-            'pick up', 'picked by driver' => null,
+            // Pick up remains unmapped.
+            'pick up' => null,
 
             'in transit' => 'out_for_delivery',
 
