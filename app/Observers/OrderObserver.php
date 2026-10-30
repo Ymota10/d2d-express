@@ -13,7 +13,7 @@ class OrderObserver
         // =================================
         // 1️⃣ Out for delivery → create attempt
         // =================================
-        if ($order->isDirty('status') && $order->status === 'out_for_delivery') {
+        if ($order->wasChanged('status') && $order->status === 'out_for_delivery') {
 
             $lastAttempt = $order->attempts()->max('attempt_number') ?? 0;
 
@@ -28,7 +28,7 @@ class OrderObserver
         // =================================
         // 2️⃣ Partial return → clone order
         // =================================
-        if ($order->isDirty('status') && $order->status === 'partial_return') {
+        if ($order->wasChanged('status') && $order->status === 'partial_return') {
 
             $newOrder = $order->replicate();
 

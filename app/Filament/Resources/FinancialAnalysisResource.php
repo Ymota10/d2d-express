@@ -627,9 +627,13 @@ class FinancialAnalysisResource extends Resource
                             ]);
 
                             foreach ($records as $order) {
+                                $order->timestamps = false;
+
                                 $order->update([
                                     'is_collected' => true,
                                 ]);
+
+                                $order->timestamps = true;
                             }
 
                             return redirect()->to(

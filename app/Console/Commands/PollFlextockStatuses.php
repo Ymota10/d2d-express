@@ -193,7 +193,13 @@ class PollFlextockStatuses extends Command
                     }
 
                     if ($metadataChanged) {
-                        $order->save();
+                        $order->timestamps = false;
+
+                        try {
+                            $order->save();
+                        } finally {
+                            $order->timestamps = true;
+                        }
 
                         Log::info('Flextock courier tracking details synchronized', [
                             'order_id' => $order->id,

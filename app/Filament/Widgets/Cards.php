@@ -28,7 +28,6 @@ class Cards extends BaseWidget
 
     protected function getStats(): array
     {
-
         $user = auth()->user();
 
         /*
@@ -37,34 +36,18 @@ class Cards extends BaseWidget
          * ============================================================
          */
 
-        $orderQuery = Order::query();
+        $startOfToday = now('Africa/Cairo')->startOfDay()->utc();
+        $startOfTomorrow = now('Africa/Cairo')->addDay()->startOfDay()->utc();
+
+        $orderQuery = Order::query()
+            ->where('created_at', '>=', $startOfToday)
+            ->where('created_at', '<', $startOfTomorrow);
 
         // If not admin → show only this user's orders
         if (! $user?->isAdmin()) {
             $orderQuery->where('users_id', $user->id);
         }
 
-        /*
-         * ============================================================
-         * TODAY'S ORDERS
-         * ============================================================
-         *
-         * We use updated_at because the order's status changes during
-         * its lifecycle.
-         *
-         * This means the cards show orders whose current status was
-         * updated today, instead of the lifetime total.
-         */
-
-        // Today's orders based on Cairo time.
-        // Convert the Cairo day boundaries to UTC for database timestamps.
-        $cairoNow = now('Africa/Cairo');
-
-        $startOfToday = $cairoNow->copy()->startOfDay()->utc();
-        $startOfTomorrow = $cairoNow->copy()->addDay()->startOfDay()->utc();
-        $orderQuery
-            ->where('updated_at', '>=', $startOfToday)
-            ->where('updated_at', '<', $startOfTomorrow);
         /*
          * ============================================================
          * ORDER STATUS COUNTS
@@ -103,16 +86,15 @@ class Cards extends BaseWidget
             ->count();
 
         $collectedCashSales = Order::query()
-            ->where('updated_at', '>=', $startOfToday)
-            ->where('updated_at', '<', $startOfTomorrow)
-            ->whereIn('status', ['success_delivery', 'partial_return']);
+            ->whereIn('status', ['success_delivery', 'partial_return'])
+            ->where('created_at', '>=', $startOfToday)
+            ->where('created_at', '<', $startOfTomorrow);
 
         if (! $user?->isAdmin()) {
             $collectedCashSales->where('users_id', $user->id);
         }
 
         $collectedCashSales = $collectedCashSales->sum('cod_amount');
-
         /*
          * ============================================================
          * RETURN CARDS
@@ -162,11 +144,11 @@ class Cards extends BaseWidget
             //     : null,
 
             // ========================================================
-            // TODAY'S ORDER STATUS CARDS
+            // ORDER STATUS CARDS
             // ========================================================
 
             Stat::make(
-                'Pickup Requests',
+                'New',
                 $pickupRequest
             )
                 ->icon('heroicon-o-hand-raised')
