@@ -25,7 +25,10 @@ class TodaysOrderFlow extends LineChartWidget
     protected function getData(): array
     {
         $query = Order::query()
-            ->whereDate('updated_at', today());
+            ->whereBetween('updated_at', [
+                today()->startOfDay(),
+                today()->endOfDay(),
+            ]);
 
         // Shipper sees only his own orders
         if (Auth::user()->management === 'shipper') {
