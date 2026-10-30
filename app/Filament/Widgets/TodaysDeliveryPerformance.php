@@ -10,6 +10,8 @@ class TodaysDeliveryPerformance extends DoughnutChartWidget
 {
     protected static ?string $heading = 'Delivery Performance';
 
+    protected static ?string $pollingInterval = '30s';
+
     protected function getExtraAttributes(): array
     {
         return [
@@ -24,11 +26,18 @@ class TodaysDeliveryPerformance extends DoughnutChartWidget
 
     protected function getData(): array
     {
+        /*
+         * ============================================================
+         * TODAY'S DATE RANGE (CAIRO TIMEZONE)
+         * ============================================================
+         */
+
+        $startOfToday = now('Africa/Cairo')->startOfDay()->utc();
+        $startOfTomorrow = now('Africa/Cairo')->addDay()->startOfDay()->utc();
+
         $query = Order::query()
-            ->whereBetween('updated_at', [
-                today()->startOfDay(),
-                today()->endOfDay(),
-            ]);
+            ->where('updated_at', '>=', $startOfToday)
+            ->where('updated_at', '<', $startOfTomorrow);
 
         // Shipper sees only his own orders
         if (Auth::user()->management === 'shipper') {
@@ -70,43 +79,43 @@ class TodaysDeliveryPerformance extends DoughnutChartWidget
             'pickup_request' => [
                 'label' => 'New',
                 'count' => $orders['pickup_request'] ?? 0,
-                'color' => '#FFD700', // Yellow
+                'color' => '#FFD700',
             ],
 
             'warehouse_received' => [
                 'label' => 'Warehouse Received',
                 'count' => $orders['warehouse_received'] ?? 0,
-                'color' => '#2563EB', // Blue
+                'color' => '#2563EB',
             ],
 
             'out_for_delivery' => [
                 'label' => 'OFD',
                 'count' => $orders['out_for_delivery'] ?? 0,
-                'color' => '#90EE90', // Light Green
+                'color' => '#90EE90',
             ],
 
             'success_delivery' => [
                 'label' => 'Success Delivery',
                 'count' => $successDelivery,
-                'color' => '#15803D', // Dark Green
+                'color' => '#15803D',
             ],
 
             'undelivered' => [
                 'label' => 'Undelivered',
                 'count' => $orders['undelivered'] ?? 0,
-                'color' => '#DC2626', // Red
+                'color' => '#DC2626',
             ],
 
             'in_progress' => [
                 'label' => 'In Progress',
                 'count' => $orders['in_progress'] ?? 0,
-                'color' => '#800080', // Purple
+                'color' => '#800080',
             ],
 
             'returned_to_warehouse' => [
                 'label' => 'Returned to Warehouse',
                 'count' => $orders['returned_to_warehouse'] ?? 0,
-                'color' => '#87CEFA', // Light Blue
+                'color' => '#87CEFA',
             ],
         ];
 

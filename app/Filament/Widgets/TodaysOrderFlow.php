@@ -10,6 +10,8 @@ class TodaysOrderFlow extends LineChartWidget
 {
     protected static ?string $heading = 'Order Flow';
 
+    protected static ?string $pollingInterval = '30s';
+
     protected function getExtraAttributes(): array
     {
         return [
@@ -24,26 +26,44 @@ class TodaysOrderFlow extends LineChartWidget
 
     protected function getData(): array
     {
+        /*
+         * ============================================================
+         * TODAY'S DATE RANGE (CAIRO TIMEZONE)
+         * ============================================================
+         */
+
+        $startOfToday = now('Africa/Cairo')->startOfDay()->utc();
+        $startOfTomorrow = now('Africa/Cairo')->addDay()->startOfDay()->utc();
+
         $query = Order::query()
-            ->whereBetween('updated_at', [
-                today()->startOfDay(),
-                today()->endOfDay(),
-            ]);
+            ->where('updated_at', '>=', $startOfToday)
+            ->where('updated_at', '<', $startOfTomorrow);
 
         // Shipper sees only his own orders
         if (Auth::user()->management === 'shipper') {
             $query->where('users_id', Auth::id());
         }
 
+        /*
+         * ============================================================
+         * GROUP ORDERS BY CAIRO HOUR
+         * ============================================================
+         *
+         * Database timestamps are stored in UTC.
+         * Convert them to Cairo time before grouping.
+         */
+
         $orders = $query
-            ->selectRaw('HOUR(updated_at) as hour, COUNT(*) as total')
+            ->selectRaw(
+                'HOUR(CONVERT_TZ(updated_at, "+00:00", "+02:00")) as hour, COUNT(*) as total'
+            )
             ->groupBy('hour')
             ->pluck('total', 'hour');
 
         $labels = [];
         $data = [];
 
-        // Show the full day, hour by hour
+        // Show the full Cairo day, hour by hour
         foreach (range(0, 23) as $hour) {
             $labels[] = date('g A', strtotime(sprintf('%02d:00', $hour)));
             $data[] = $orders[$hour] ?? 0;
@@ -55,7 +75,7 @@ class TodaysOrderFlow extends LineChartWidget
                     'label' => 'Orders',
                     'data' => $data,
 
-                    // Lynk primary blue
+                    // LYNK primary blue
                     'borderColor' => '#2563EB',
                     'backgroundColor' => 'rgba(37, 99, 235, 0.2)',
                     'fill' => true,
@@ -67,6 +87,7 @@ class TodaysOrderFlow extends LineChartWidget
                     'pointHoverRadius' => 6,
                 ],
             ],
+
             'labels' => $labels,
         ];
     }
@@ -78,11 +99,13 @@ class TodaysOrderFlow extends LineChartWidget
                 'duration' => 1500,
                 'easing' => 'easeInOutQuart',
             ],
+
             'plugins' => [
                 'legend' => [
                     'display' => true,
                 ],
             ],
+
             'scales' => [
                 'x' => [
                     'ticks' => [
@@ -90,13 +113,16 @@ class TodaysOrderFlow extends LineChartWidget
                         'minRotation' => 0,
                     ],
                 ],
+
                 'y' => [
                     'beginAtZero' => true,
+
                     'ticks' => [
                         'precision' => 0,
                     ],
                 ],
             ],
+
             'elements' => [
                 'line' => [
                     'borderWidth' => 1.5,

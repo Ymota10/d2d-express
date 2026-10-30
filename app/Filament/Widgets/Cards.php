@@ -40,8 +40,8 @@ class Cards extends BaseWidget
         $startOfTomorrow = now('Africa/Cairo')->addDay()->startOfDay()->utc();
 
         $orderQuery = Order::query()
-            ->where('created_at', '>=', $startOfToday)
-            ->where('created_at', '<', $startOfTomorrow);
+            ->where('updated_at', '>=', $startOfToday)
+            ->where('updated_at', '<', $startOfTomorrow);
 
         // If not admin → show only this user's orders
         if (! $user?->isAdmin()) {
@@ -87,8 +87,8 @@ class Cards extends BaseWidget
 
         $collectedCashSales = Order::query()
             ->whereIn('status', ['success_delivery', 'partial_return'])
-            ->where('created_at', '>=', $startOfToday)
-            ->where('created_at', '<', $startOfTomorrow);
+            ->where('updated_at', '>=', $startOfToday)
+            ->where('updated_at', '<', $startOfTomorrow);
 
         if (! $user?->isAdmin()) {
             $collectedCashSales->where('users_id', $user->id);
