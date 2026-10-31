@@ -205,8 +205,7 @@
 <div class="qr-wrapper">
 
 
-<!-- Flextock barcode: admin users only -->
-@if (auth()->user()?->isAdmin())
+<!-- Flextock barcode:-->
     <div class="barcode-item">
         <img
             src="https://barcode.tec-it.com/barcode.ashx?data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}&code=Code128&dpi=96"
@@ -217,7 +216,6 @@
             {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
         </div>
     </div>
-@endif
 
 </div>
 
