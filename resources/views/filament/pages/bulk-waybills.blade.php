@@ -218,8 +218,7 @@
 <div class="top-row">
     <div class="barcode-block">
 
-        <!-- Flextock QR code: admin users only -->
-        @if (auth()->user()?->isAdmin())
+        <!-- Flextock QR code:-->
             <div class="qr-item">
                 <img
                     src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}"
@@ -230,7 +229,6 @@
                     {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
                 </div>
             </div>
-        @endif
 
     </div>
 </div>

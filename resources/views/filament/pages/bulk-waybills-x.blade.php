@@ -205,7 +205,7 @@
 <div class="qr-wrapper">
 
 
-<!-- Flextock barcode:-->
+<!-- Flextock barcode:
     <div class="barcode-item">
         <img
             src="https://barcode.tec-it.com/barcode.ashx?data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}&code=Code128&dpi=96"
@@ -215,7 +215,23 @@
         <div class="waybill-number">
             {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
         </div>
+    </div> -->
+
+    <div class="barcode-block">
+
+<!-- Flextock QR code:-->
+    <div class="qr-item">
+        <img
+            src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}"
+            alt="Flextock QR Code"
+        >
+
+        <div class="number">
+            {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
+        </div>
     </div>
+
+</div>
 
 </div>
 
