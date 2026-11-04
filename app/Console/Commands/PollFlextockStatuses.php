@@ -429,11 +429,11 @@ class PollFlextockStatuses extends Command
         $shopifyStatus = match ($status) {
             'out_for_delivery' => [
                 'status' => 'OUT_FOR_DELIVERY',
-                'message' => 'Order is out for delivery by D2DExpress',
+                'message' => 'Order is out for delivery by Lynk',
             ],
             'success_delivery' => [
                 'status' => 'DELIVERED',
-                'message' => 'Order delivered by D2DExpress',
+                'message' => 'Order delivered by Lynk',
             ],
             'failed_attempt' => [
                 'status' => 'FAILURE',
