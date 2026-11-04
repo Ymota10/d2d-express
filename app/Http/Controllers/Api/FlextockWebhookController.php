@@ -112,7 +112,7 @@ class FlextockWebhookController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Flextock status received but no D2D status mapping exists. Order was not changed.',
+                'message' => 'Flextock status received but no Lynk status mapping exists. Order was not changed.',
                 'order_id' => $order->id,
                 'order_code' => $orderCode,
                 'flextock_status' => $flextockStatus,
@@ -427,7 +427,7 @@ class FlextockWebhookController extends Controller
 
                         'trackingCompany' => 'LYNK',
 
-                        'trackingUrl' => 'https://www.d2d-dashboard.com/admin/track?waybill='
+                        'trackingUrl' => 'https://dashboard.lynk-eg.com/admin/track?waybill='
                             .$order->waybill_number,
 
                         'notifyCustomer' => true,
@@ -477,7 +477,7 @@ class FlextockWebhookController extends Controller
 
                 $status = 'OUT_FOR_DELIVERY';
 
-                $message = 'Order is out for delivery by D2DExpress';
+                $message = 'Order is out for delivery by Lynk';
 
                 break;
 
@@ -485,7 +485,7 @@ class FlextockWebhookController extends Controller
 
                 $status = 'DELIVERED';
 
-                $message = 'Order delivered by D2DExpress';
+                $message = 'Order delivered by Lynk';
 
                 break;
 
