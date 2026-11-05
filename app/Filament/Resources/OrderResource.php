@@ -235,7 +235,7 @@ class OrderResource extends Resource
                     Forms\Components\Textarea::make('description'),
                     Forms\Components\Textarea::make('notes'),
                     Forms\Components\TextInput::make('order_id')->maxLength(255),
-                    Forms\Components\TextInput::make('shopify_order_number')->label('Order Reference')->maxLength(255)->searchable(),
+                    Forms\Components\TextInput::make('shopify_order_number')->label('Order Reference')->maxLength(255),
                     Forms\Components\TextInput::make('flyer_no')->maxLength(255),
                     Forms\Components\TextInput::make('cod_amount')
                         ->numeric()
