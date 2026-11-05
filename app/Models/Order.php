@@ -61,6 +61,7 @@ class Order extends Model
         // Externals
         'source',
         'external_order_id',
+        'shopify_order_number',
         'external_payload',
 
     ];

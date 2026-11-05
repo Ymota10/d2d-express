@@ -370,12 +370,11 @@
 
 <!-- FOOTER -->
 <div class="footer">
-
     <table style="width:100%; font-size:8px;">
         <tr>
             <td style="text-align:left;">
-                {{ __('Order Ref') }}:
-                {{ $order->reference ?? '-' }}
+            {{ __('Order Reference') }}:
+                {{ $order->shopify_order_number ?? $order->reference ?? '-' }}
             </td>
 
             <td style="text-align:right;">
@@ -384,7 +383,6 @@
             </td>
         </tr>
     </table>
-
 </div>
 
 </div>

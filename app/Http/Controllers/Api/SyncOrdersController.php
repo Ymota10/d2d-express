@@ -307,6 +307,8 @@ class SyncOrdersController extends Controller
                     'order_id' => $shopifyOrder['id'],
                     'external_order_id' => $shopifyOrder['id'],
 
+                    'shopify_order_number' => $shopifyOrder['name'] ?? null,
+
                     'notes' => json_encode($shopifyOrder['paymentGatewayNames'] ?? []),
 
                     'service_type' => $this->mapOrderType($shopifyOrder['orderType'] ?? 'delivery'),

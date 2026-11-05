@@ -209,6 +209,14 @@
     $receiverAddress = $convertArabic($order->receiver_address);
     $areaName = $convertArabic($order->area?->name);
     $cityName = $convertArabic($order->city?->name);
+
+
+    $waybillNumber = $order->waybill_number ?? '123456789';
+
+$displayWaybill = $order->service_type === 'normal_cod'
+    ? 'DTDT-OT-' . $waybillNumber
+    : $waybillNumber;
+
 @endphp
 
 
@@ -217,19 +225,16 @@
     <!-- HEADER -->
 <div class="top-row">
     <div class="barcode-block">
+        <div class="qr-item">
+            <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($displayWaybill) }}"
+                alt="Flextock QR Code"
+            >
 
-        <!-- Flextock QR code:-->
-            <div class="qr-item">
-                <img
-                    src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}"
-                    alt="Flextock QR Code"
-                >
-
-                <div class="number">
-                    {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
-                </div>
+            <div class="number">
+                {{ $displayWaybill }}
             </div>
-
+        </div>
     </div>
 </div>
 
@@ -357,31 +362,25 @@
     </table>
 
     <!-- FOOTER -->
-    <div class="footer">
+<div class="footer">
+    <table class="footer-table">
+        <tr>
+            <td class="footer-left">
+                {{ __('Notes') }}: -
+            </td>
 
-        <table class="footer-table">
+            <td class="footer-center">
+                {{ __('Order Reference') }}:
+                {{ $order->shopify_order_number ?? $order->reference ?? '-' }}
+            </td>
 
-            <tr>
-
-                <td class="footer-left">
-                    {{ __('Notes') }}: -
-                </td>
-
-                <td class="footer-center">
-                    {{ __('Order Ref') }}:
-                    {{ $order->reference ?? '-' }}
-                </td>
-
-                <td class="footer-right">
-                    <strong>{{ __('Generated') }}:</strong>
-                    {{ now()->format('Y-m-d H:i') }}
-                </td>
-
-            </tr>
-
-        </table>
-
-    </div>
+            <td class="footer-right">
+                <strong>{{ __('Generated') }}:</strong>
+                {{ now()->format('Y-m-d H:i') }}
+            </td>
+        </tr>
+    </table>
+</div>
 
 </div>
 
