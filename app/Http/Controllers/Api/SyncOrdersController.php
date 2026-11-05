@@ -318,7 +318,7 @@ class SyncOrdersController extends Controller
                     'city_id' => $city?->id ?? 1,
                     'area_id' => $finalArea?->id ?? 1,
                     'delivery_cost' => $finalArea?->delivery_cost ?? 85,
-
+                    'return_cost' => $finalArea?->return_cost ?? 60,
                     'source' => 'shopify',
                     'external_payload' => json_encode($shopifyOrder),
                 ]);
