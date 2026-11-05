@@ -201,38 +201,30 @@
     <div class="header">
 
     
-<!-- BARCODE -->
+@php
+    $waybillNumber = $order->waybill_number ?? '123456789';
+
+    $displayWaybill = $order->service_type === 'normal_cod'
+        ? 'DTDT-OT-' . $waybillNumber
+        : $waybillNumber;
+@endphp
+
 <div class="qr-wrapper">
-
-
-<!-- Flextock barcode:
-    <div class="barcode-item">
-        <img
-            src="https://barcode.tec-it.com/barcode.ashx?data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}&code=Code128&dpi=96"
-            alt="Flextock Barcode"
-        >
-
-        <div class="waybill-number">
-            {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
-        </div>
-    </div> -->
-
     <div class="barcode-block">
 
-<!-- Flextock QR code:-->
-    <div class="qr-item">
-        <img
-            src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode('DTDT-OT-' . ($order->waybill_number ?? '123456789')) }}"
-            alt="Flextock QR Code"
-        >
+        <!-- Flextock QR code -->
+        <div class="qr-item">
+            <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($displayWaybill) }}"
+                alt="Flextock QR Code"
+            >
 
-        <div class="number">
-            {{ 'DTDT-OT-' . ($order->waybill_number ?? '123456789') }}
+            <div class="number">
+                {{ $displayWaybill }}
+            </div>
         </div>
+
     </div>
-
-</div>
-
 </div>
 
     </div>
